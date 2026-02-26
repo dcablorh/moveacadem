@@ -1,18 +1,30 @@
 import { Layout } from "@/components/layout/Layout";
 import { useCourses } from "@/hooks/useAcademy";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, BookOpen, User } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function CoursesPage() {
   const { data: courses, isLoading } = useCourses();
+  const account = useCurrentAccount();
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState<"all" | "mine">("all");
 
-  const filtered = courses?.filter((c: any) =>
-    c.title?.toLowerCase().includes(search.toLowerCase()) ||
-    c.description?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = courses?.filter((c: any) => {
+    const matchesSearch =
+      c.title?.toLowerCase().includes(search.toLowerCase()) ||
+      c.description?.toLowerCase().includes(search.toLowerCase());
+    const matchesTab =
+      tab === "all" || (tab === "mine" && c.creator === account?.address);
+    return matchesSearch && matchesTab;
+  });
+
+  const myCourseCount = courses?.filter(
+    (c: any) => c.creator === account?.address
+  )?.length || 0;
 
   return (
     <Layout>
@@ -22,11 +34,42 @@ export default function CoursesPage() {
           animate={{ opacity: 1, y: 0 }}
         >
           <h1 className="mb-2 font-display text-3xl font-bold text-foreground">
-            All Courses
+            Courses
           </h1>
-          <p className="mb-8 text-muted-foreground">
-            Browse and enroll in courses built by the community
+          <p className="mb-6 text-muted-foreground">
+            Browse community courses or manage your own
           </p>
+
+          {/* Tabs */}
+          {account && (
+            <div className="mb-6 flex gap-1 rounded-xl bg-muted p-1 max-w-xs">
+              <button
+                onClick={() => setTab("all")}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
+                  tab === "all"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground"
+                }`}
+              >
+                <BookOpen className="h-4 w-4" /> All
+              </button>
+              <button
+                onClick={() => setTab("mine")}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
+                  tab === "mine"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground"
+                }`}
+              >
+                <User className="h-4 w-4" /> My Courses
+                {myCourseCount > 0 && (
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                    {myCourseCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Search */}
           <div className="relative mb-8 max-w-md">
@@ -44,7 +87,10 @@ export default function CoursesPage() {
         {isLoading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-48 animate-pulse rounded-xl bg-muted" />
+              <div
+                key={i}
+                className="h-48 animate-pulse rounded-xl bg-muted"
+              />
             ))}
           </div>
         ) : filtered && filtered.length > 0 ? (
@@ -62,8 +108,26 @@ export default function CoursesPage() {
             ))}
           </div>
         ) : (
-          <div className="py-16 text-center text-muted-foreground">
-            No courses found.
+          <div className="rounded-xl border border-dashed border-border bg-muted/30 p-12 text-center">
+            {tab === "mine" ? (
+              <>
+                <User className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <h3 className="mb-2 font-display text-lg font-semibold text-foreground">
+                  No courses created yet
+                </h3>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Start building your first course on Move Academy!
+                </p>
+                <Link
+                  to="/create"
+                  className="btn-primary-gradient inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold"
+                >
+                  Create Course
+                </Link>
+              </>
+            ) : (
+              <p className="text-muted-foreground">No courses found.</p>
+            )}
           </div>
         )}
       </div>

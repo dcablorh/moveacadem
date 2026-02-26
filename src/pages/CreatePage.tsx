@@ -11,7 +11,9 @@ export default function CreatePage() {
   const account = useCurrentAccount();
   const [searchParams] = useSearchParams();
   const existingCourseId = searchParams.get("course");
-  const [tab, setTab] = useState<"course" | "lesson" | "exercise">(existingCourseId ? "lesson" : "course");
+  const tabParam = searchParams.get("tab");
+  const defaultTab = tabParam === "exercise" ? "exercise" : existingCourseId ? "lesson" : "course";
+  const [tab, setTab] = useState<"course" | "lesson" | "exercise">(defaultTab);
 
   if (!account) {
     return (
