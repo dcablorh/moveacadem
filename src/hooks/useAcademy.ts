@@ -369,6 +369,60 @@ export function useSubmitExercise() {
   };
 }
 
+export function useUpdateCourse() {
+  const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+  const queryClient = useQueryClient();
+
+  return async (courseId: string, capId: string, title: string, description: string) => {
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${PACKAGE_ID}::${MODULE_NAME}::update_course`,
+      arguments: [
+        tx.object(courseId),
+        tx.object(capId),
+        tx.pure(bcs.string().serialize(title)),
+        tx.pure(bcs.string().serialize(description)),
+      ],
+    });
+    const result = await signAndExecute({ transaction: tx });
+    queryClient.invalidateQueries({ queryKey: ["courses"] });
+    queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+    return result;
+  };
+}
+
+export function useUpdateLesson() {
+  const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+  const queryClient = useQueryClient();
+
+  return async (
+    lessonId: string,
+    courseId: string,
+    capId: string,
+    title: string,
+    contentUri: string,
+    quizUri: string
+  ) => {
+    const tx = new Transaction();
+    const contentBytes = Array.from(new TextEncoder().encode(contentUri));
+    const quizBytes = Array.from(new TextEncoder().encode(quizUri));
+    tx.moveCall({
+      target: `${PACKAGE_ID}::${MODULE_NAME}::update_lesson`,
+      arguments: [
+        tx.object(lessonId),
+        tx.object(courseId),
+        tx.object(capId),
+        tx.pure(bcs.string().serialize(title)),
+        tx.pure(bcs.vector(bcs.u8()).serialize(contentBytes)),
+        tx.pure(bcs.vector(bcs.u8()).serialize(quizBytes)),
+      ],
+    });
+    const result = await signAndExecute({ transaction: tx });
+    queryClient.invalidateQueries({ queryKey: ["lessons", courseId] });
+    return result;
+  };
+}
+
 export function useIssueCertificate() {
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const queryClient = useQueryClient();
