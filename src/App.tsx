@@ -11,6 +11,7 @@ import CreatePage from "./pages/CreatePage";
 import LessonViewPage from "./pages/LessonView";
 import CertificatesPage from "./pages/CertificatesPage";
 import ProfilePage from "./pages/ProfilePage";
+import MyLearningPage from "./pages/MyLearningPage";
 
 const App = () => (
   <SuiProviderWrapper>
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/lesson/:courseId/:lessonId" element={<LessonViewPage />} />
           <Route path="/certificates" element={<CertificatesPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/my-learning" element={<MyLearningPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -163,7 +163,7 @@ const Index = () => {
           </div>
         ) : courses && courses.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {courses.slice(0, 6).map((course: any) => (
+            {courses.filter((c: any) => c.published).slice(0, 6).map((course: any) => (
               <CourseCard
                 key={course.id}
                 id={course.id}

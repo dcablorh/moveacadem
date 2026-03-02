@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
-import { BookOpen, Trophy, Plus, User, Home } from "lucide-react";
+import { BookOpen, Trophy, Plus, User, Home, GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function Navbar() {
@@ -11,6 +11,7 @@ export function Navbar() {
     { to: "/", label: "Home", icon: Home },
     { to: "/courses", label: "Courses", icon: BookOpen },
     ...(account ? [
+      { to: "/my-learning", label: "My Learning", icon: GraduationCap },
       { to: "/create", label: "Create", icon: Plus },
       { to: "/certificates", label: "Certificates", icon: Trophy },
       { to: "/profile", label: "Profile", icon: User },
