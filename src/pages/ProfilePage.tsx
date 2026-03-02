@@ -5,6 +5,7 @@ import { ProgressRing } from "@/components/progress/ProgressRing";
 import { motion } from "framer-motion";
 import { BookOpen, Trophy, Star, Copy, Check } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function ProfilePage() {
   const account = useCurrentAccount();
@@ -70,6 +71,16 @@ export default function ProfilePage() {
               <p className="font-display text-2xl font-bold text-foreground">{caps?.length || 0}</p>
               <p className="text-xs text-muted-foreground">Courses Created</p>
             </div>
+          </div>
+
+          {/* Quick Links */}
+          <div className="mb-10 flex gap-3">
+            <Link to="/my-learning" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+              <BookOpen className="h-4 w-4" /> My Learning
+            </Link>
+            <Link to="/certificates" className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted">
+              <Trophy className="h-4 w-4" /> Certificates
+            </Link>
           </div>
 
           {/* Recent Progress */}
