@@ -11,12 +11,13 @@ import {
   useCreateExercise,
   useLessonExercises,
   useStudentCertificates,
+  useCourseExerciseCounts,
 } from "@/hooks/useAcademy";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { LessonItem } from "@/components/courses/LessonItem";
 import { ProgressRing } from "@/components/progress/ProgressRing";
 import { WalrusUploader } from "@/components/walrus/WalrusUploader";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
   User,
@@ -27,7 +28,11 @@ import {
   Dumbbell,
   Settings,
   Upload,
-  Image,
+  CheckCircle2,
+  Circle,
+  AlertTriangle,
+  Rocket,
+  Eye,
 } from "lucide-react";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useState } from "react";
@@ -42,12 +47,15 @@ export default function CourseDetailPage() {
   const { data: progress } = useStudentProgress();
   const { data: caps } = useOwnerCaps();
   const { data: certificates } = useStudentCertificates();
+  const { data: exerciseCounts } = useCourseExerciseCounts(courseId);
   const publishCourse = usePublishCourse();
   const updateCourse = useUpdateCourse();
   const issueCertificate = useIssueCertificate();
   const createLesson = useCreateLesson();
   const createExercise = useCreateExercise();
+
   const [publishing, setPublishing] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
@@ -73,12 +81,20 @@ export default function CourseDetailPage() {
   const progressPct = lessonCount > 0 ? (completedCount / lessonCount) * 100 : 0;
   const courseCompleted = lessonCount > 0 && completedCount >= lessonCount;
 
+  // Exercise counts for readiness
+  const lessonIds = lessons?.map((l: any) => l.id) || [];
+  const totalExercises = lessonIds.reduce(
+    (sum, lid) => sum + (exerciseCounts?.perLesson[lid] || 0),
+    0
+  );
+
   const handlePublish = async () => {
     if (!ownerCap) return;
     setPublishing(true);
     try {
       await publishCourse(courseId!, ownerCap.id);
-      toast.success("Course published!");
+      toast.success("Course published! Students can now start learning.");
+      setShowPublishConfirm(false);
     } catch (e: any) {
       toast.error(e.message || "Failed to publish");
     } finally {
@@ -147,15 +163,24 @@ export default function CourseDetailPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <div className="mb-3 flex items-center gap-2">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
                 {course.published ? (
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">Published</span>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                    ✓ Published
+                  </span>
                 ) : (
-                  <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">Draft</span>
+                  <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
+                    Draft — Unpublished
+                  </span>
                 )}
                 {isOwner && (
                   <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
                     <Settings className="mr-1 inline h-3 w-3" /> You own this course
+                  </span>
+                )}
+                {!isOwner && !course.published && (
+                  <span className="text-xs text-muted-foreground italic">
+                    This course is not yet available for students
                   </span>
                 )}
               </div>
@@ -182,47 +207,140 @@ export default function CourseDetailPage() {
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5"><BookOpen className="h-4 w-4" />{lessonCount} lessons</span>
+                <span className="flex items-center gap-1.5"><Dumbbell className="h-4 w-4" />{totalExercises} exercises</span>
                 <span className="flex items-center gap-1.5"><User className="h-4 w-4" />{course.creator?.slice(0, 6)}...{course.creator?.slice(-4)}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              {account && lessonCount > 0 && <ProgressRing progress={progressPct} />}
+              {account && lessonCount > 0 && !isOwner && <ProgressRing progress={progressPct} />}
+              {isOwner && !course.published && (
+                <div className="text-right text-xs text-muted-foreground">
+                  <p>Lessons: <span className="font-semibold text-foreground">{lessonCount}</span></p>
+                  <p>Exercises: <span className="font-semibold text-foreground">{totalExercises}</span></p>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
 
-        {/* Owner Actions Panel */}
+        {/* ===== OWNER SECTION ===== */}
         {isOwner && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8 rounded-xl border border-border bg-card p-5 shadow-card">
-            <h3 className="mb-4 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
-              <Settings className="h-4 w-4 text-primary" /> Course Management
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              {!course.published && (
-                <button onClick={handlePublish} disabled={publishing} className="btn-primary-gradient inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold disabled:opacity-50">
-                  <Upload className="h-4 w-4" />{publishing ? "Publishing..." : "Publish Course"}
+          <>
+            {/* Course Management Bar */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-6 rounded-xl border border-border bg-card p-5 shadow-card">
+              <h3 className="mb-4 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
+                <Settings className="h-4 w-4 text-primary" /> Course Management
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                {!editing && (
+                  <button onClick={handleEdit} className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
+                    <Pencil className="h-4 w-4" /> Edit Course Info
+                  </button>
+                )}
+                <button onClick={() => setShowAddLesson(!showAddLesson)} className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
+                  <Plus className="h-4 w-4" /> {lessonCount === 0 ? "Add First Lesson" : "Add Next Lesson"}
                 </button>
+                {course.published && (
+                  <button onClick={() => navigate(`/course/${courseId}`)} className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
+                    <Eye className="h-4 w-4" /> View as Student
+                  </button>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Course Readiness Checklist (only if not published) */}
+            {!course.published && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-8 rounded-xl border border-border bg-card p-5 shadow-card">
+                <h3 className="mb-4 font-display text-sm font-semibold text-foreground">
+                  📋 Course Readiness Checklist
+                </h3>
+                <div className="space-y-2.5">
+                  <ChecklistItem checked label="Course created" />
+                  <ChecklistItem checked={lessonCount > 0} label={`Lessons added (${lessonCount})`} />
+                  <ChecklistItem checked={totalExercises > 0} label={`Exercises created (${totalExercises})`} />
+                </div>
+
+                <div className="mt-6">
+                  {lessonCount > 0 ? (
+                    <>
+                      <button
+                        onClick={() => setShowPublishConfirm(true)}
+                        className="btn-primary-gradient inline-flex items-center gap-2 rounded-xl px-6 py-3 font-display font-semibold text-lg shadow-glow"
+                      >
+                        <Rocket className="h-5 w-5" /> Publish Course
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">
+                      Add at least one lesson before publishing.
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Publish Confirmation Dialog */}
+            <AnimatePresence>
+              {showPublishConfirm && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
+                  onClick={() => setShowPublishConfirm(false)}
+                >
+                  <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.95, opacity: 0 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-card-hover"
+                  >
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
+                        <AlertTriangle className="h-5 w-5 text-accent" />
+                      </div>
+                      <h3 className="font-display text-lg font-bold text-foreground">Publish Course?</h3>
+                    </div>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      This action is <span className="font-semibold text-foreground">irreversible</span>. Once published, students can start taking the course immediately.
+                    </p>
+                    <div className="mb-4 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+                      <p><span className="font-medium text-foreground">"{course.title}"</span></p>
+                      <p>{lessonCount} lessons · {totalExercises} exercises</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handlePublish}
+                        disabled={publishing}
+                        className="btn-primary-gradient flex-1 rounded-xl py-2.5 font-display font-semibold disabled:opacity-50"
+                      >
+                        {publishing ? "Publishing..." : "Yes, Publish"}
+                      </button>
+                      <button
+                        onClick={() => setShowPublishConfirm(false)}
+                        className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-foreground hover:bg-muted"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
               )}
-              {!editing && (
-                <button onClick={handleEdit} className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
-                  <Pencil className="h-4 w-4" /> Edit Course Info
-                </button>
+            </AnimatePresence>
+
+            {/* Inline Add Lesson Form */}
+            <AnimatePresence>
+              {showAddLesson && ownerCap && (
+                <AddLessonInline courseId={courseId!} capId={ownerCap.id} createLesson={createLesson} onClose={() => setShowAddLesson(false)} nextOrder={(lessons?.length || 0) + 1} />
               )}
-              <button onClick={() => setShowAddLesson(!showAddLesson)} className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
-                <Plus className="h-4 w-4" /> Add Lesson
-              </button>
-            </div>
-          </motion.div>
+            </AnimatePresence>
+          </>
         )}
 
-        {/* Inline Add Lesson Form */}
-        {showAddLesson && ownerCap && (
-          <AddLessonInline courseId={courseId!} capId={ownerCap.id} createLesson={createLesson} onClose={() => setShowAddLesson(false)} nextOrder={(lessons?.length || 0) + 1} />
-        )}
-
-        {/* Certificate claim */}
-        {account && courseCompleted && course.published && !hasCertificate && (
+        {/* ===== STUDENT: Certificate Claim ===== */}
+        {account && !isOwner && courseCompleted && course.published && !hasCertificate && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-6">
             <div className="text-center">
               <Award className="mx-auto mb-3 h-10 w-10 text-primary" />
@@ -260,7 +378,7 @@ export default function CourseDetailPage() {
           </div>
         )}
 
-        {/* Lessons */}
+        {/* ===== LESSONS LIST ===== */}
         <div className="max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-xl font-bold text-foreground">Lessons</h2>
@@ -270,37 +388,55 @@ export default function CourseDetailPage() {
               </button>
             )}
           </div>
+
           {lessons && lessons.length > 0 ? (
             <div className="space-y-3">
-              {lessons.map((lesson: any, idx: number) => (
-                <div key={lesson.id}>
-                  <LessonItem
-                    title={lesson.title}
-                    order={idx + 1}
-                    completed={completedLessonIds.has(lesson.id)}
-                    onClick={() => navigate(`/lesson/${courseId}/${lesson.id}`)}
-                  />
-                  {/* Add Exercise button per lesson (owner only) */}
-                  {isOwner && (
-                    <div className="ml-14 mt-1">
-                      {showAddExercise === lesson.id ? (
-                        <AddExerciseInline lessonId={lesson.id} capId={ownerCap!.id} createExercise={createExercise} onClose={() => setShowAddExercise(null)} />
-                      ) : (
-                        <button onClick={() => setShowAddExercise(lesson.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
-                          <Dumbbell className="h-3 w-3" /> Add Exercise
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+              {lessons.map((lesson: any, idx: number) => {
+                const exCount = exerciseCounts?.perLesson[lesson.id] || 0;
+                return (
+                  <div key={lesson.id}>
+                    <LessonItem
+                      title={lesson.title}
+                      order={idx + 1}
+                      completed={completedLessonIds.has(lesson.id)}
+                      exerciseCount={exCount}
+                      onClick={() => navigate(`/lesson/${courseId}/${lesson.id}`)}
+                    />
+                    {/* Add Exercise button per lesson (owner only) */}
+                    {isOwner && (
+                      <div className="ml-14 mt-1">
+                        <AnimatePresence>
+                          {showAddExercise === lesson.id ? (
+                            <AddExerciseInline lessonId={lesson.id} capId={ownerCap!.id} createExercise={createExercise} onClose={() => setShowAddExercise(null)} />
+                          ) : (
+                            <button onClick={() => setShowAddExercise(lesson.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
+                              <Dumbbell className="h-3 w-3" /> {exCount > 0 ? `${exCount} exercises · Add more` : "Add Exercise"}
+                            </button>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
-              No lessons added yet.
+            <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-10 text-center">
+              <BookOpen className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+              <h3 className="mb-2 font-display text-lg font-semibold text-foreground">
+                {isOwner ? "Your course has no lessons yet" : "No lessons available"}
+              </h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                {isOwner
+                  ? "Add your first lesson to start building content."
+                  : "Check back later for new content."}
+              </p>
               {isOwner && (
-                <button onClick={() => setShowAddLesson(true)} className="mt-2 block w-full text-primary hover:underline">
-                  Add your first lesson →
+                <button
+                  onClick={() => setShowAddLesson(true)}
+                  className="btn-primary-gradient inline-flex items-center gap-2 rounded-xl px-6 py-3 font-display font-semibold"
+                >
+                  <Plus className="h-5 w-5" /> Add First Lesson
                 </button>
               )}
             </div>
@@ -308,6 +444,22 @@ export default function CourseDetailPage() {
         </div>
       </div>
     </Layout>
+  );
+}
+
+// Checklist item
+function ChecklistItem({ checked, label }: { checked: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      {checked ? (
+        <CheckCircle2 className="h-4.5 w-4.5 text-primary flex-shrink-0" />
+      ) : (
+        <Circle className="h-4.5 w-4.5 text-muted-foreground flex-shrink-0" />
+      )}
+      <span className={`text-sm ${checked ? "text-foreground" : "text-muted-foreground"}`}>
+        {label}
+      </span>
+    </div>
   );
 }
 
@@ -337,9 +489,11 @@ function AddLessonInline({ courseId, capId, createLesson, onClose, nextOrder }: 
   };
 
   return (
-    <motion.form initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} onSubmit={handleSubmit} className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-5 space-y-4">
+    <motion.form initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} onSubmit={handleSubmit} className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-display text-sm font-semibold text-foreground">Add New Lesson</h3>
+        <h3 className="font-display text-sm font-semibold text-foreground">
+          {order === 1 ? "Add First Lesson" : `Add Lesson ${order}`}
+        </h3>
         <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
       </div>
       <div>
@@ -385,7 +539,7 @@ function AddExerciseInline({ lessonId, capId, createExercise, onClose }: {
   };
 
   return (
-    <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} onSubmit={handleSubmit} className="mt-2 rounded-xl border border-border bg-card p-4 space-y-3">
+    <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={handleSubmit} className="mt-2 rounded-xl border border-border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-semibold text-foreground">Add Exercise</h4>
         <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>

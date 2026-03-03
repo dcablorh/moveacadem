@@ -1,8 +1,8 @@
 import { Layout } from "@/components/layout/Layout";
-import { useCourse, useCourseLessons, useLessonExercises, useCompleteLesson, useSubmitExercise, useOwnerCaps, useUpdateLesson } from "@/hooks/useAcademy";
+import { useCourse, useCourseLessons, useLessonExercises, useCompleteLesson, useSubmitExercise, useOwnerCaps, useUpdateLesson, useStudentProgress } from "@/hooks/useAcademy";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Send, Dumbbell, ExternalLink, Pencil, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Send, Dumbbell, ExternalLink, Pencil, X, Trophy, Star } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCurrentAccount } from "@mysten/dapp-kit";
@@ -16,6 +16,7 @@ export default function LessonViewPage() {
   const { data: lessons } = useCourseLessons(courseId);
   const { data: exercises } = useLessonExercises(lessonId);
   const { data: caps } = useOwnerCaps();
+  const { data: progress } = useStudentProgress();
   const completeLesson = useCompleteLesson();
   const submitExercise = useSubmitExercise();
   const updateLesson = useUpdateLesson();
@@ -26,6 +27,11 @@ export default function LessonViewPage() {
   const lesson = lessons?.find((l: any) => l.id === lessonId);
   const isOwner = caps?.some((c: any) => c.course_id === courseId);
   const ownerCap = caps?.find((c: any) => c.course_id === courseId);
+
+  // Check if this lesson is already completed
+  const lessonCompleted = progress?.some(
+    (p: any) => p.course_id === courseId && p.lesson_id === lessonId
+  );
 
   // Decode URI from bytes if needed
   const decodeUri = (uri: any): string => {
@@ -47,7 +53,11 @@ export default function LessonViewPage() {
       await completeLesson(courseId, lessonId, s);
       toast.success("Lesson completed!");
     } catch (e: any) {
-      toast.error(e.message || "Failed to complete");
+      if (e.message?.includes("EAlreadyCompleted")) {
+        toast.error("You've already completed this lesson");
+      } else {
+        toast.error(e.message || "Failed to complete");
+      }
     } finally {
       setCompleting(false);
     }
@@ -63,7 +73,14 @@ export default function LessonViewPage() {
         {lesson ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="mb-6 flex items-start justify-between">
-              <h1 className="font-display text-3xl font-bold text-foreground">{lesson.title}</h1>
+              <div>
+                <h1 className="font-display text-3xl font-bold text-foreground">{lesson.title}</h1>
+                {lessonCompleted && (
+                  <div className="mt-2 flex items-center gap-1.5 text-sm text-primary">
+                    <CheckCircle2 className="h-4 w-4" /> Lesson Completed
+                  </div>
+                )}
+              </div>
               {isOwner && !editing && (
                 <button
                   onClick={() => setEditing(true)}
@@ -89,7 +106,7 @@ export default function LessonViewPage() {
 
             {/* Content section */}
             <div className="mb-6 rounded-xl border border-border bg-card p-6">
-              <h3 className="mb-3 text-sm font-medium text-muted-foreground">Lesson Content</h3>
+              <h3 className="mb-3 text-sm font-medium text-muted-foreground">📖 Lesson Content</h3>
               {contentUri ? (
                 <WalrusContent uri={contentUri} />
               ) : (
@@ -98,22 +115,18 @@ export default function LessonViewPage() {
             </div>
 
             {/* Quiz section */}
-            <div className="mb-6 rounded-xl border border-border bg-card p-6">
-              <h3 className="mb-3 text-sm font-medium text-muted-foreground">Quiz</h3>
-              {quizUri ? (
-                <a href={quizUri} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline">
-                  <ExternalLink className="h-4 w-4" /> Take the quiz
-                </a>
-              ) : (
-                <p className="text-sm text-muted-foreground">No quiz URI set</p>
-              )}
-            </div>
+            {quizUri && (
+              <div className="mb-6 rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-3 text-sm font-medium text-muted-foreground">📝 Quiz</h3>
+                <WalrusContent uri={quizUri} />
+              </div>
+            )}
 
             {/* Exercises */}
             {exercises && exercises.length > 0 && (
               <div className="mb-6">
                 <h3 className="mb-3 font-display text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Dumbbell className="h-5 w-5" /> Exercises
+                  <Dumbbell className="h-5 w-5" /> Exercises ({exercises.length})
                 </h3>
                 <div className="space-y-3">
                   {exercises.map((ex: any) => (
@@ -129,18 +142,22 @@ export default function LessonViewPage() {
               </div>
             )}
 
-            {/* Complete button */}
-            {account && (
+            {/* Manual lesson completion (quiz path) */}
+            {account && !lessonCompleted && (
               <div className="rounded-xl border border-border bg-card p-5">
-                <h3 className="mb-3 text-sm font-medium text-muted-foreground">Mark Lesson Complete</h3>
+                <h3 className="mb-1 text-sm font-medium text-foreground">Mark Lesson Complete</h3>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  After completing the quiz above, enter your score and mark this lesson as done.
+                </p>
                 <div className="flex items-end gap-3">
                   <div className="flex-1">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Quiz Score</label>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Quiz Score (0–100)</label>
                     <input
                       type="number"
                       value={score}
                       onChange={(e) => setScore(e.target.value)}
                       min={0}
+                      max={100}
                       className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
@@ -155,6 +172,18 @@ export default function LessonViewPage() {
                 </div>
               </div>
             )}
+
+            {lessonCompleted && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-center text-sm">
+                <Trophy className="mr-1 inline h-4 w-4 text-primary" />
+                <span className="font-medium text-foreground">
+                  You've completed this lesson!
+                </span>{" "}
+                <Link to={`/course/${courseId}`} className="text-primary hover:underline">
+                  Continue to next lesson →
+                </Link>
+              </div>
+            )}
           </motion.div>
         ) : (
           <div className="py-16 text-center text-muted-foreground">Lesson not found</div>
@@ -165,21 +194,9 @@ export default function LessonViewPage() {
 }
 
 function EditLessonForm({
-  lesson,
-  courseId,
-  capId,
-  updateLesson,
-  contentUri,
-  quizUri,
-  onClose,
+  lesson, courseId, capId, updateLesson, contentUri, quizUri, onClose,
 }: {
-  lesson: any;
-  courseId: string;
-  capId: string;
-  updateLesson: any;
-  contentUri: string;
-  quizUri: string;
-  onClose: () => void;
+  lesson: any; courseId: string; capId: string; updateLesson: any; contentUri: string; quizUri: string; onClose: () => void;
 }) {
   const [title, setTitle] = useState(lesson.title || "");
   const [newContentUri, setNewContentUri] = useState(contentUri);
@@ -222,14 +239,9 @@ function EditLessonForm({
 }
 
 function ExerciseItem({
-  exercise,
-  courseId,
-  lessonId,
-  submitExercise,
+  exercise, courseId, lessonId, submitExercise,
 }: {
-  exercise: any;
-  courseId: string;
-  lessonId: string;
+  exercise: any; courseId: string; lessonId: string;
   submitExercise: (courseId: string, lessonId: string, exerciseId: string, score: number, hintsUsed: number) => Promise<any>;
 }) {
   const [score, setScore] = useState("");
@@ -271,13 +283,13 @@ function ExerciseItem({
         <div>
           <p className="font-medium text-card-foreground">{exercise.title}</p>
           <p className="text-xs text-muted-foreground">
-            Max: {exercise.max_score} · Mastery: {exercise.mastery_threshold}
+            Max: {exercise.max_score} · Mastery threshold: {exercise.mastery_threshold}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {exerciseUri && (
             <a href={exerciseUri} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-primary hover:underline">
-              Practice <ExternalLink className="h-3.5 w-3.5" />
+              <Star className="h-3.5 w-3.5" /> Start Exercise <ExternalLink className="h-3 w-3" />
             </a>
           )}
           <button onClick={() => setExpanded(!expanded)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
@@ -290,12 +302,12 @@ function ExerciseItem({
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-4 border-t border-border pt-4">
           <div className="flex items-end gap-3">
             <div className="flex-1">
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Score</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Your Score</label>
               <input
                 type="number"
                 value={score}
                 onChange={(e) => setScore(e.target.value)}
-                placeholder={`0-${exercise.max_score}`}
+                placeholder={`0–${exercise.max_score}`}
                 min={0}
                 max={exercise.max_score}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
