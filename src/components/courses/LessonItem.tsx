@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, Lock } from "lucide-react";
+import { CheckCircle2, Circle, Lock, Dumbbell } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface LessonItemProps {
@@ -6,10 +6,11 @@ interface LessonItemProps {
   order: number;
   completed?: boolean;
   locked?: boolean;
+  exerciseCount?: number;
   onClick?: () => void;
 }
 
-export function LessonItem({ title, order, completed, locked, onClick }: LessonItemProps) {
+export function LessonItem({ title, order, completed, locked, exerciseCount, onClick }: LessonItemProps) {
   return (
     <motion.button
       whileHover={!locked ? { x: 4 } : undefined}
@@ -45,9 +46,14 @@ export function LessonItem({ title, order, completed, locked, onClick }: LessonI
         <h4 className={`font-medium ${completed ? "text-primary" : "text-card-foreground"}`}>
           {title}
         </h4>
-        <p className="text-xs text-muted-foreground">
-          {completed ? "Completed" : locked ? "Locked" : "Ready to learn"}
-        </p>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span>{completed ? "Completed" : locked ? "Locked" : "Ready to learn"}</span>
+          {exerciseCount != null && exerciseCount > 0 && (
+            <span className="flex items-center gap-1">
+              <Dumbbell className="h-3 w-3" /> {exerciseCount} exercises
+            </span>
+          )}
+        </div>
       </div>
 
       {!locked && !completed && (

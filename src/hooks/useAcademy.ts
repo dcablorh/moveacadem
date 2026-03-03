@@ -143,6 +143,33 @@ export function useLessonExercises(lessonId: string | undefined) {
   });
 }
 
+// Fetch exercise counts for all lessons in a course (for readiness checklist)
+export function useCourseExerciseCounts(courseId: string | undefined) {
+  const client = useSuiClient();
+  return useQuery({
+    queryKey: ["exerciseCounts", courseId],
+    enabled: !!courseId,
+    queryFn: async () => {
+      const result = await client.queryEvents({
+        query: { MoveEventType: `${PACKAGE_ID}::${MODULE_NAME}::ExerciseCreated` },
+        limit: 200,
+      });
+
+      const counts: Record<string, number> = {};
+      let total = 0;
+      result.data.forEach((e) => {
+        const parsed = e.parsedJson as any;
+        // We need to check if this exercise belongs to a lesson in this course
+        // ExerciseCreated event should have lesson_id; we filter later
+        const lid = parsed.lesson_id;
+        counts[lid] = (counts[lid] || 0) + 1;
+        total++;
+      });
+      return { perLesson: counts, total };
+    },
+  });
+}
+
 // Fetch student progress
 export function useStudentProgress() {
   const client = useSuiClient();
@@ -214,10 +241,11 @@ export function useOwnerCaps() {
 
 // Transaction hooks
 export function useCreateCourse() {
+  const client = useSuiClient();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const queryClient = useQueryClient();
 
-  return async (title: string, description: string) => {
+  return async (title: string, description: string): Promise<string | null> => {
     const tx = new Transaction();
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::create_course`,
@@ -230,7 +258,21 @@ export function useCreateCourse() {
     const result = await signAndExecute({ transaction: tx });
     queryClient.invalidateQueries({ queryKey: ["courses"] });
     queryClient.invalidateQueries({ queryKey: ["ownerCaps"] });
-    return result;
+
+    // Extract created course ID from transaction effects
+    try {
+      const txDetails = await client.waitForTransaction({
+        digest: result.digest,
+        options: { showObjectChanges: true },
+      });
+      const created = txDetails.objectChanges?.find(
+        (c: any) => c.type === "created" && c.objectType?.includes("::Course")
+        && !c.objectType?.includes("CourseOwnerCap")
+      );
+      return (created as any)?.objectId || null;
+    } catch {
+      return null;
+    }
   };
 }
 
@@ -313,6 +355,7 @@ export function useCreateExercise() {
     });
     const result = await signAndExecute({ transaction: tx });
     queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
+    queryClient.invalidateQueries({ queryKey: ["exerciseCounts"] });
     return result;
   };
 }

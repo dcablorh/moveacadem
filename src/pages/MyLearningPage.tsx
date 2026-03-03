@@ -2,9 +2,10 @@ import { Layout } from "@/components/layout/Layout";
 import { useCourses, useStudentProgress, useStudentCertificates, useIssueCertificate } from "@/hooks/useAcademy";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { ProgressRing } from "@/components/progress/ProgressRing";
+import { WalrusUploader } from "@/components/walrus/WalrusUploader";
 import { motion } from "framer-motion";
 import { BookOpen, Trophy, ArrowRight, Award, GraduationCap } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -14,7 +15,10 @@ export default function MyLearningPage() {
   const { data: progress } = useStudentProgress();
   const { data: certificates } = useStudentCertificates();
   const issueCertificate = useIssueCertificate();
+  const navigate = useNavigate();
   const [claimingCourseId, setClaimingCourseId] = useState<string | null>(null);
+  const [certImageUrl, setCertImageUrl] = useState("https://moveacademy.io/cert-default.png");
+  const [showCertUpload, setShowCertUpload] = useState<string | null>(null);
 
   if (!account) {
     return (
@@ -52,12 +56,18 @@ export default function MyLearningPage() {
   const handleClaim = async (courseId: string) => {
     setClaimingCourseId(courseId);
     try {
-      await issueCertificate(courseId, "https://moveacademy.io/cert-default.png");
-      toast.success("Certificate issued!");
+      await issueCertificate(courseId, certImageUrl);
+      toast.success("Certificate issued! 🎉");
+      navigate("/certificates");
     } catch (e: any) {
-      toast.error(e.message || "Failed to issue certificate");
+      if (e.message?.includes("ECertificateAlreadyIssued")) {
+        toast.error("You already have a certificate for this course");
+      } else {
+        toast.error(e.message || "Failed to issue certificate");
+      }
     } finally {
       setClaimingCourseId(null);
+      setShowCertUpload(null);
     }
   };
 
@@ -113,30 +123,52 @@ export default function MyLearningPage() {
           </h2>
           {completedCourses.length > 0 ? (
             <div className="space-y-4">
-              {completedCourses.map(({ courseId, course, lessons, lessonCount, hasCert }) => (
-                <div key={courseId} className="flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-5">
-                  <ProgressRing progress={100} size={64} strokeWidth={5} />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-display font-semibold text-card-foreground line-clamp-1">
-                      {course?.title || `Course ${courseId.slice(0, 8)}...`}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {lessonCount} / {lessonCount} lessons · All complete
-                    </p>
+              {completedCourses.map(({ courseId, course, lessonCount, hasCert }) => (
+                <div key={courseId} className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+                  <div className="flex items-center gap-4">
+                    <ProgressRing progress={100} size={64} strokeWidth={5} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-display font-semibold text-card-foreground line-clamp-1">
+                        {course?.title || `Course ${courseId.slice(0, 8)}...`}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {lessonCount} / {lessonCount} lessons · All complete
+                      </p>
+                    </div>
+                    {hasCert ? (
+                      <Link to="/certificates" className="flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition-colors">
+                        <Award className="h-3.5 w-3.5" /> View Certificate
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => setShowCertUpload(showCertUpload === courseId ? null : courseId)}
+                        disabled={claimingCourseId === courseId}
+                        className="btn-primary-gradient flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+                      >
+                        <Award className="h-4 w-4" />
+                        {claimingCourseId === courseId ? "Claiming..." : "Claim Certificate"}
+                      </button>
+                    )}
                   </div>
-                  {hasCert ? (
-                    <span className="flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent">
-                      <Award className="h-3.5 w-3.5" /> Certified
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleClaim(courseId)}
-                      disabled={claimingCourseId === courseId}
-                      className="btn-primary-gradient flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
-                    >
-                      <Award className="h-4 w-4" />
-                      {claimingCourseId === courseId ? "Claiming..." : "Claim Certificate"}
-                    </button>
+
+                  {/* Certificate image upload */}
+                  {showCertUpload === courseId && !hasCert && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-4 border-t border-border pt-4 space-y-3">
+                      <WalrusUploader
+                        label="Certificate Image (optional)"
+                        onUploaded={(url) => setCertImageUrl(url)}
+                        accept="image/*"
+                      />
+                      <p className="text-xs text-muted-foreground">Or use default certificate image</p>
+                      <button
+                        onClick={() => handleClaim(courseId)}
+                        disabled={claimingCourseId === courseId}
+                        className="btn-primary-gradient w-full rounded-xl py-2.5 font-display font-semibold disabled:opacity-50"
+                      >
+                        <Award className="mr-2 inline h-4 w-4" />
+                        {claimingCourseId === courseId ? "Issuing..." : "Issue Certificate NFT"}
+                      </button>
+                    </motion.div>
                   )}
                 </div>
               ))}

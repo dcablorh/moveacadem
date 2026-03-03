@@ -1,44 +1,56 @@
 import { Layout } from "@/components/layout/Layout";
-import { useCourses } from "@/hooks/useAcademy";
+import { useCourses, useOwnerCaps } from "@/hooks/useAcademy";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { motion } from "framer-motion";
-import { Search, BookOpen, User } from "lucide-react";
+import { Search, BookOpen, User, Plus, Settings } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function CoursesPage() {
   const { data: courses, isLoading } = useCourses();
+  const { data: caps } = useOwnerCaps();
   const account = useCurrentAccount();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"all" | "mine">("all");
+
+  const ownedCourseIds = new Set(caps?.map((c: any) => c.course_id) || []);
 
   const filtered = courses?.filter((c: any) => {
     const matchesSearch =
       c.title?.toLowerCase().includes(search.toLowerCase()) ||
       c.description?.toLowerCase().includes(search.toLowerCase());
     const matchesTab =
-      tab === "all" || (tab === "mine" && c.creator === account?.address);
+      tab === "all" || (tab === "mine" && ownedCourseIds.has(c.id));
     return matchesSearch && matchesTab;
   });
 
   const myCourseCount = courses?.filter(
-    (c: any) => c.creator === account?.address
+    (c: any) => ownedCourseIds.has(c.id)
   )?.length || 0;
 
   return (
     <Layout>
       <div className="container mx-auto px-4 py-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h1 className="mb-2 font-display text-3xl font-bold text-foreground">
-            Courses
-          </h1>
-          <p className="mb-6 text-muted-foreground">
-            Browse community courses or manage your own
-          </p>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className="mb-1 font-display text-3xl font-bold text-foreground">
+                {tab === "mine" ? "My Courses" : "Courses"}
+              </h1>
+              <p className="text-muted-foreground">
+                {tab === "mine" ? "Manage and build your courses" : "Browse community courses or manage your own"}
+              </p>
+            </div>
+            {account && (
+              <Link
+                to="/create"
+                className="btn-primary-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-display font-semibold"
+              >
+                <Plus className="h-4 w-4" /> Create New Course
+              </Link>
+            )}
+          </div>
 
           {/* Tabs */}
           {account && (
@@ -46,9 +58,7 @@ export default function CoursesPage() {
               <button
                 onClick={() => setTab("all")}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
-                  tab === "all"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground"
+                  tab === "all" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                 }`}
               >
                 <BookOpen className="h-4 w-4" /> All
@@ -56,12 +66,10 @@ export default function CoursesPage() {
               <button
                 onClick={() => setTab("mine")}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
-                  tab === "mine"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground"
+                  tab === "mine" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                 }`}
               >
-                <User className="h-4 w-4" /> My Courses
+                <Settings className="h-4 w-4" /> My Courses
                 {myCourseCount > 0 && (
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                     {myCourseCount}
@@ -87,10 +95,7 @@ export default function CoursesPage() {
         {isLoading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="h-48 animate-pulse rounded-xl bg-muted"
-              />
+              <div key={i} className="h-48 animate-pulse rounded-xl bg-muted" />
             ))}
           </div>
         ) : filtered && filtered.length > 0 ? (
@@ -104,6 +109,7 @@ export default function CoursesPage() {
                 creator={course.creator}
                 lessonCount={Number(course.lesson_count)}
                 published={course.published}
+                isOwner={ownedCourseIds.has(course.id)}
               />
             ))}
           </div>
