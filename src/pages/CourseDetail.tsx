@@ -3,6 +3,7 @@ import {
   useCourse,
   useCourseLessons,
   useOwnerCaps,
+  useAdminCaps,
   usePublishCourse,
   useUpdateCourse,
   useStudentProgress,
@@ -13,6 +14,7 @@ import {
   useStudentCertificates,
   useCourseExerciseCounts,
 } from "@/hooks/useAcademy";
+import { LESSON_REGISTRY_ID } from "@/config/sui";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { LessonItem } from "@/components/courses/LessonItem";
 import { ProgressRing } from "@/components/progress/ProgressRing";
@@ -46,6 +48,8 @@ export default function CourseDetailPage() {
   const { data: lessons } = useCourseLessons(courseId);
   const { data: progress } = useStudentProgress();
   const { data: caps } = useOwnerCaps();
+  const { data: adminCaps } = useAdminCaps();
+  const isAdmin = (adminCaps?.length || 0) > 0;
   const { data: certificates } = useStudentCertificates();
   const { data: exerciseCounts } = useCourseExerciseCounts(courseId);
   const publishCourse = usePublishCourse();
@@ -95,6 +99,7 @@ export default function CourseDetailPage() {
       await publishCourse(courseId!, ownerCap.id);
       toast.success("Course published! Students can now start learning.");
       setShowPublishConfirm(false);
+      navigate(`/publish-success/${courseId}`);
     } catch (e: any) {
       toast.error(e.message || "Failed to publish");
     } finally {
@@ -467,6 +472,9 @@ function ChecklistItem({ checked, label }: { checked: boolean; label: string }) 
 function AddLessonInline({ courseId, capId, createLesson, onClose, nextOrder }: {
   courseId: string; capId: string; createLesson: any; onClose: () => void; nextOrder: number;
 }) {
+  if (!capId) {
+    return <p className="text-red-500">You must own the course owner capability to add lessons.</p>;
+  }
   const [title, setTitle] = useState("");
   const [contentUri, setContentUri] = useState("");
   const [quizUri, setQuizUri] = useState("");
@@ -477,12 +485,36 @@ function AddLessonInline({ courseId, capId, createLesson, onClose, nextOrder }: 
     e.preventDefault();
     if (!title.trim() || !contentUri || !quizUri) { toast.error("Fill all fields"); return; }
     setLoading(true);
+
+    // guard missing identifiers
+    if (!courseId || !capId) {
+      console.error("missing courseId or capId before submit", { courseId, capId });
+      toast.error("Unable to add lesson: missing course information.");
+      setLoading(false);
+      return;
+    }
+
+    // log input values for debugging type errors
+    console.debug("creating lesson with:", {
+      courseId,
+      capId,
+      title,
+      contentUri,
+      quizUri,
+      order,
+      lessonRegistry: LESSON_REGISTRY_ID,
+    });
+
     try {
-      await createLesson(courseId, capId, title, contentUri, quizUri, order);
+      // make sure order is a number (should already be)
+      const numericOrder = Number(order);
+      await createLesson(courseId, capId, title, contentUri, quizUri, numericOrder);
       toast.success("Lesson added!");
       onClose();
     } catch (err: any) {
-      toast.error(err.message || "Failed to create lesson");
+      // print full error object to console for investigation
+      console.error("createLesson failed", err);
+      toast.error(err?.message || "Failed to create lesson");
     } finally {
       setLoading(false);
     }
@@ -504,7 +536,15 @@ function AddLessonInline({ courseId, capId, createLesson, onClose, nextOrder }: 
       <WalrusUploader label="Quiz Content" onUploaded={(url) => setQuizUri(url)} placeholder="Write quiz questions here..." />
       <div>
         <label className="mb-1 block text-sm font-medium text-foreground">Order</label>
-        <input type="number" value={order} onChange={(e) => setOrder(Number(e.target.value))} min={1} className="w-24 rounded-xl border border-input bg-card px-4 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
+        <input
+          type="number"
+          value={order}
+          onChange={(e) => setOrder(Number(e.target.value))}
+          min={1}
+          disabled // we compute this automatically
+          className="w-24 rounded-xl border border-input bg-card/50 px-4 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+        />
+        <p className="text-xs text-muted-foreground">lesson order is generated for you ({order})</p>
       </div>
       <button type="submit" disabled={loading || !contentUri || !quizUri} className="btn-primary-gradient w-full rounded-xl py-3 font-display font-semibold disabled:opacity-50">
         {loading ? "Adding..." : "Add Lesson"}
@@ -517,6 +557,9 @@ function AddLessonInline({ courseId, capId, createLesson, onClose, nextOrder }: 
 function AddExerciseInline({ lessonId, capId, createExercise, onClose }: {
   lessonId: string; capId: string; createExercise: any; onClose: () => void;
 }) {
+  if (!capId) {
+    return <p className="text-red-500">You must own the course owner capability to add exercises.</p>;
+  }
   const [title, setTitle] = useState("");
   const [exerciseUri, setExerciseUri] = useState("");
   const [maxScore, setMaxScore] = useState(100);

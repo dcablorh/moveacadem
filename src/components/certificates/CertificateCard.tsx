@@ -1,15 +1,16 @@
-import { Award, ExternalLink } from "lucide-react";
+import { Award, ExternalLink, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { getBlobUrl, AGGREGATOR_URL } from "@/lib/walrus";
 
 interface CertificateCardProps {
+  id?: string;
   courseTitle: string;
   issuedAt: string;
   imageUrl?: string;
   student: string;
 }
 
-export function CertificateCard({ courseTitle, issuedAt, imageUrl, student }: CertificateCardProps) {
+export function CertificateCard({ id, courseTitle, issuedAt, imageUrl, student }: CertificateCardProps) {
   const truncatedStudent = `${student.slice(0, 6)}...${student.slice(-4)}`;
 
   // Decode image URL from bytes if needed
@@ -70,13 +71,20 @@ export function CertificateCard({ courseTitle, issuedAt, imageUrl, student }: Ce
           </span>
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
-          <span className="flex items-center gap-1 text-xs font-medium text-primary">
-            Soulbound NFT
-          </span>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-            Non-transferable
-          </span>
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 text-xs font-medium text-primary">
+              Soulbound NFT
+            </span>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              Non-transferable
+            </span>
+          </div>
+          {id && (
+            <span className="flex items-center gap-1 text-xs font-medium text-primary group-hover:underline">
+              <Eye className="h-3.5 w-3.5" /> View
+            </span>
+          )}
         </div>
       </div>
     </motion.div>

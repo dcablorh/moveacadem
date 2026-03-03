@@ -1,5 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
-import { useCourses, useStudentProgress, useStudentCertificates, useIssueCertificate } from "@/hooks/useAcademy";
+import { useCourses, useStudentProgress, useStudentCertificates, useIssueCertificate, useCourseLessons } from "@/hooks/useAcademy";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { ProgressRing } from "@/components/progress/ProgressRing";
 import { WalrusUploader } from "@/components/walrus/WalrusUploader";
@@ -8,6 +8,23 @@ import { BookOpen, Trophy, ArrowRight, Award, GraduationCap } from "lucide-react
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
+
+// Helper: resolves first uncompleted lesson so Continue lands in the right place
+function ResumeLessonLink({ courseId, completedLessonIds }: { courseId: string; completedLessonIds: Set<string> }) {
+  const { data: lessonsData } = useCourseLessons(courseId);
+  const lessons: any[] = Array.isArray(lessonsData) ? lessonsData : [];
+  const sorted = [...lessons].sort((a, b) => Number(a.order) - Number(b.order));
+  const next = sorted.find((l) => !completedLessonIds.has(String(l.id)));
+  const to = next ? `/lesson/${courseId}/${next.id}` : `/course/${courseId}`;
+  return (
+    <Link
+      to={to}
+      className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+    >
+      Continue <ArrowRight className="h-4 w-4" />
+    </Link>
+  );
+}
 
 export default function MyLearningPage() {
   const account = useCurrentAccount();
@@ -44,10 +61,12 @@ export default function MyLearningPage() {
 
   // Separate into in-progress and completed
   const courseEntries = Object.entries(progressByCourse).map(([courseId, lessons]) => {
-    const course = courses?.find((c: any) => c.id === courseId);
+    const course = courses?.find((c: any) => String(c.id) === courseId);
     const lessonCount = Number(course?.lesson_count || 0);
     const completed = lessonCount > 0 && lessons.length >= lessonCount;
-    return { courseId, course, lessons, lessonCount, completed, hasCert: certifiedCourseIds.has(courseId) };
+    // Find completed lesson IDs for this course
+    const completedLessonIds = new Set(lessons.map((l: any) => String(l.lesson_id)));
+    return { courseId, course, lessons, lessonCount, completed, hasCert: certifiedCourseIds.has(courseId), completedLessonIds };
   });
 
   const inProgress = courseEntries.filter((e) => !e.completed);
@@ -86,7 +105,7 @@ export default function MyLearningPage() {
           </h2>
           {inProgress.length > 0 ? (
             <div className="space-y-4">
-              {inProgress.map(({ courseId, course, lessons, lessonCount }) => {
+              {inProgress.map(({ courseId, course, lessons, lessonCount, completedLessonIds }) => {
                 const pct = lessonCount > 0 ? (lessons.length / lessonCount) * 100 : 0;
                 return (
                   <div key={courseId} className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card">
@@ -99,12 +118,7 @@ export default function MyLearningPage() {
                         {lessons.length} / {lessonCount} lessons completed
                       </p>
                     </div>
-                    <Link
-                      to={`/course/${courseId}`}
-                      className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                    >
-                      Continue <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    <ResumeLessonLink courseId={courseId} completedLessonIds={completedLessonIds} />
                   </div>
                 );
               })}

@@ -4,6 +4,7 @@ import { useCurrentAccount } from "@mysten/dapp-kit";
 import { CertificateCard } from "@/components/certificates/CertificateCard";
 import { motion } from "framer-motion";
 import { Trophy } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function CertificatesPage() {
   const account = useCurrentAccount();
@@ -45,15 +46,20 @@ export default function CertificatesPage() {
           </div>
         ) : certificates && certificates.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2">
-            {certificates.map((cert: any) => (
-              <CertificateCard
-                key={cert.id}
-                courseTitle={cert.course_title}
-                issuedAt={cert.issued_at}
-                imageUrl={cert.image_url}
-                student={cert.student}
-              />
-            ))}
+            {certificates.map((cert: any) => {
+              const certId = typeof cert.id === "string" ? cert.id : String(cert.id);
+              return (
+                <Link key={certId} to={`/certificate/${certId}`} className="block group">
+                  <CertificateCard
+                    id={certId}
+                    courseTitle={cert.course_title}
+                    issuedAt={cert.issued_at}
+                    imageUrl={cert.image_url}
+                    student={cert.student}
+                  />
+                </Link>
+              );
+            })}
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-muted/30 p-16 text-center">

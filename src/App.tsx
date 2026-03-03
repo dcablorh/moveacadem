@@ -10,8 +10,11 @@ import CourseDetailPage from "./pages/CourseDetail";
 import CreatePage from "./pages/CreatePage";
 import LessonViewPage from "./pages/LessonView";
 import CertificatesPage from "./pages/CertificatesPage";
+import CertificateDetailPage from "./pages/CertificateDetailPage";
 import ProfilePage from "./pages/ProfilePage";
 import MyLearningPage from "./pages/MyLearningPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import PublishSuccessPage from "./pages/PublishSuccessPage";
 
 const App = () => (
   <SuiProviderWrapper>
@@ -26,8 +29,11 @@ const App = () => (
           <Route path="/create" element={<CreatePage />} />
           <Route path="/lesson/:courseId/:lessonId" element={<LessonViewPage />} />
           <Route path="/certificates" element={<CertificatesPage />} />
+          <Route path="/certificate/:certId" element={<CertificateDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/my-learning" element={<MyLearningPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/publish-success/:courseId" element={<PublishSuccessPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

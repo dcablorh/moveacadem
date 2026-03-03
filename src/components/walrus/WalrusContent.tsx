@@ -1,17 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { readBlob, AGGREGATOR_URL } from "@/lib/walrus";
 import { Loader2, ExternalLink } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface WalrusContentProps {
   uri: string;
   className?: string;
+  /** When true, tries to render content as Markdown. Default: true */
+  markdown?: boolean;
 }
 
 /**
  * Renders content from a Walrus blob URI or aggregator URL.
  * Extracts blobId from aggregator URLs, or treats as external link.
+ * Renders content as Markdown by default.
  */
-export function WalrusContent({ uri, className }: WalrusContentProps) {
+export function WalrusContent({ uri, className, markdown = true }: WalrusContentProps) {
   const blobId = extractBlobId(uri);
 
   const { data: content, isLoading, error } = useQuery({
@@ -51,11 +55,23 @@ export function WalrusContent({ uri, className }: WalrusContentProps) {
     );
   }
 
+  if (!content) return null;
+
+  // Determine if content looks like Markdown
+  const looksLikeMarkdown = /^#{1,6}\s|^\*\*|\*\s|^-\s|^\d+\.\s|```|\[.*\]\(/.test(String(content));
+  const shouldRenderMarkdown = markdown && looksLikeMarkdown;
+
   return (
-    <div className={`prose prose-sm max-w-none dark:prose-invert ${className || ""}`}>
-      <pre className="whitespace-pre-wrap rounded-xl border border-border bg-muted/30 p-4 text-sm text-foreground">
-        {content}
-      </pre>
+    <div className={`${className || ""}`}>
+      {shouldRenderMarkdown ? (
+        <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-display prose-headings:text-foreground prose-p:text-foreground/90 prose-code:text-primary prose-code:bg-muted prose-code:rounded prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-a:text-primary">
+          <ReactMarkdown>{String(content)}</ReactMarkdown>
+        </div>
+      ) : (
+        <pre className="whitespace-pre-wrap rounded-xl border border-border bg-muted/30 p-4 text-sm text-foreground font-mono">
+          {String(content)}
+        </pre>
+      )}
     </div>
   );
 }

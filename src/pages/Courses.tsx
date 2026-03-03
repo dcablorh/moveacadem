@@ -16,14 +16,21 @@ export default function CoursesPage() {
 
   const ownedCourseIds = new Set(caps?.map((c: any) => c.course_id) || []);
 
-  const filtered = courses?.filter((c: any) => {
-    const matchesSearch =
-      c.title?.toLowerCase().includes(search.toLowerCase()) ||
-      c.description?.toLowerCase().includes(search.toLowerCase());
-    const matchesTab =
-      tab === "all" || (tab === "mine" && ownedCourseIds.has(c.id));
-    return matchesSearch && matchesTab;
-  });
+  // ensure each course id is a string and remove duplicates
+  const filtered = courses
+    ? Array.from(
+        new Map(
+          courses.map((c: any) => [String(c.id), { ...c, id: String(c.id) }])
+        ).values()
+      ).filter((c: any) => {
+        const matchesSearch =
+          c.title?.toLowerCase().includes(search.toLowerCase()) ||
+          c.description?.toLowerCase().includes(search.toLowerCase());
+        const matchesTab =
+          tab === "all" || (tab === "mine" && ownedCourseIds.has(c.id));
+        return matchesSearch && matchesTab;
+      })
+    : undefined;
 
   const myCourseCount = courses?.filter(
     (c: any) => ownedCourseIds.has(c.id)
@@ -102,7 +109,7 @@ export default function CoursesPage() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((course: any) => (
               <CourseCard
-                key={course.id}
+                key={String(course.id)}
                 id={course.id}
                 title={course.title}
                 description={course.description}

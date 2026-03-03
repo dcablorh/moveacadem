@@ -1,5 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
-import { useCreateCourse } from "@/hooks/useAcademy";
+import { useCreateCourse, useAdminCaps } from "@/hooks/useAcademy";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -9,6 +9,8 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function CreatePage() {
   const account = useCurrentAccount();
+  const { data: adminCaps } = useAdminCaps();
+  const isAdmin = (adminCaps?.length || 0) > 0;
 
   if (!account) {
     return (
@@ -28,6 +30,9 @@ export default function CreatePage() {
           <ArrowLeft className="h-4 w-4" /> Back to courses
         </Link>
         <h1 className="mb-2 font-display text-3xl font-bold text-foreground">Create New Course</h1>
+        {isAdmin && (
+          <p className="mb-2 text-sm text-muted-foreground">As an admin you may skip the usual approval process.</p>
+        )}
         <p className="mb-8 text-muted-foreground">
           Start building your course. After creation, you'll be taken to the management screen to add lessons and exercises.
         </p>

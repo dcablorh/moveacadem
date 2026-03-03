@@ -15,6 +15,31 @@ import {
   courseOwnerCapType,
 } from "@/config/sui";
 
+/**
+ * Safely extract fields from a Sui MoveObject, ensuring `id` is always a
+ * plain hex-string rather than the Sui UID struct `{ id: "0x..." }`.
+ *
+ * Sui returns `content.fields.id` as `{ id: "0x..." }` for objects with
+ * `key` ability. If we naively spread the fields AFTER setting our own `id`,
+ * the UID struct overwrites it and every downstream `.id` lookup breaks
+ * (e.g. `normalizeSuiAddress` can't call `.toLowerCase()` on an object).
+ */
+function extractFields(objectId: string, fields: Record<string, any>) {
+  // Spread fields first, then override id with the raw objectId string.
+  const { id: _uid, ...rest } = fields;
+  return { ...rest, id: objectId };
+}
+
+/**
+ * Coerce a value to a Sui object-id string. Handles the case where the
+ * value is a UID struct `{ id: "0x..." }` instead of a plain string.
+ */
+function toStringId(value: any): string {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && typeof value.id === "string") return value.id;
+  throw new Error(`Invalid object ID: ${JSON.stringify(value)}`);
+}
+
 // Fetch all courses via events
 export function useCourses() {
   const client = useSuiClient();
@@ -35,7 +60,7 @@ export function useCourses() {
               options: { showContent: true },
             });
             if (obj.data?.content?.dataType === "moveObject") {
-              return { id: parsed.course_id, ...(obj.data.content.fields as any) };
+              return extractFields(parsed.course_id, obj.data.content.fields as any);
             }
           } catch {
             return null;
@@ -60,7 +85,7 @@ export function useCourse(courseId: string | undefined) {
         options: { showContent: true },
       });
       if (obj.data?.content?.dataType === "moveObject") {
-        return { id: courseId, ...(obj.data.content.fields as any) };
+        return extractFields(courseId!, obj.data.content.fields as any);
       }
       return null;
     },
@@ -92,7 +117,7 @@ export function useCourseLessons(courseId: string | undefined) {
               options: { showContent: true },
             });
             if (obj.data?.content?.dataType === "moveObject") {
-              return { id: parsed.lesson_id, ...(obj.data.content.fields as any) };
+              return extractFields(parsed.lesson_id, obj.data.content.fields as any);
             }
           } catch {
             return null;
@@ -130,7 +155,7 @@ export function useLessonExercises(lessonId: string | undefined) {
               options: { showContent: true },
             });
             if (obj.data?.content?.dataType === "moveObject") {
-              return { id: parsed.exercise_id, ...(obj.data.content.fields as any) };
+              return extractFields(parsed.exercise_id, obj.data.content.fields as any);
             }
           } catch {
             return null;
@@ -185,7 +210,7 @@ export function useStudentProgress() {
       });
       return objects.data.map((o) => {
         if (o.data?.content?.dataType === "moveObject") {
-          return { id: o.data.objectId, ...(o.data.content.fields as any) };
+          return extractFields(o.data.objectId, o.data.content.fields as any);
         }
         return null;
       }).filter(Boolean);
@@ -208,7 +233,7 @@ export function useStudentCertificates() {
       });
       return objects.data.map((o) => {
         if (o.data?.content?.dataType === "moveObject") {
-          return { id: o.data.objectId, ...(o.data.content.fields as any) };
+          return extractFields(o.data.objectId, o.data.content.fields as any);
         }
         return null;
       }).filter(Boolean);
@@ -231,7 +256,30 @@ export function useOwnerCaps() {
       });
       return objects.data.map((o) => {
         if (o.data?.content?.dataType === "moveObject") {
-          return { id: o.data.objectId, ...(o.data.content.fields as any) };
+          return extractFields(o.data.objectId, o.data.content.fields as any);
+        }
+        return null;
+      }).filter(Boolean);
+    },
+  });
+}
+
+// Fetch owned admin capabilities (if the Move module defines AdminCap)
+export function useAdminCaps() {
+  const client = useSuiClient();
+  const account = useCurrentAccount();
+  return useQuery({
+    queryKey: ["adminCaps", account?.address],
+    enabled: !!account,
+    queryFn: async () => {
+      const objects = await client.getOwnedObjects({
+        owner: account!.address,
+        filter: { StructType: adminCapType },
+        options: { showContent: true },
+      });
+      return objects.data.map((o) => {
+        if (o.data?.content?.dataType === "moveObject") {
+          return extractFields(o.data.objectId, o.data.content.fields as any);
         }
         return null;
       }).filter(Boolean);
@@ -281,19 +329,22 @@ export function usePublishCourse() {
   const queryClient = useQueryClient();
 
   return async (courseId: string, capId: string) => {
+    const cid = toStringId(courseId);
+    const cap = toStringId(capId);
     const tx = new Transaction();
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::publish_course`,
-      arguments: [tx.object(courseId), tx.object(capId)],
+      arguments: [tx.object(cid), tx.object(cap)],
     });
     const result = await signAndExecute({ transaction: tx });
     queryClient.invalidateQueries({ queryKey: ["courses"] });
-    queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+    queryClient.invalidateQueries({ queryKey: ["course", cid] });
     return result;
   };
 }
 
 export function useCreateLesson() {
+  const client = useSuiClient();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const queryClient = useQueryClient();
 
@@ -305,6 +356,47 @@ export function useCreateLesson() {
     quizUri: string,
     order: number
   ) => {
+    const cid = toStringId(courseId);
+    const cap = toStringId(capId);
+
+    // ensure we actually received the required IDs
+    if (!cid) throw new Error("createLesson called without courseId");
+    if (!cap) throw new Error("createLesson called without capId");
+
+    // runtime sanity checks to catch mismatched IDs early
+    try {
+      const courseObj = await client.getObject({
+        id: cid,
+        options: { showType: true },
+      });
+      const capObj = await client.getObject({
+        id: cap,
+        options: { showType: true },
+      });
+      const regObj = await client.getObject({
+        id: LESSON_REGISTRY_ID,
+        options: { showType: true },
+      });
+      console.debug("object types before create_lesson", {
+        course: courseObj.data?.type,
+        cap: capObj.data?.type,
+        lessonRegistry: regObj.data?.type,
+      });
+      // simple assertions; throw informative error if mismatch
+      if (!courseObj.data?.type?.includes("::Course")) {
+        throw new Error(`Expected course object, got ${courseObj.data?.type}`);
+      }
+      if (!capObj.data?.type?.includes("::CourseOwnerCap")) {
+        throw new Error(`Expected cap object, got ${capObj.data?.type}`);
+      }
+      if (!regObj.data?.type?.includes("::LessonRegistry")) {
+        throw new Error(`Expected lesson registry object, got ${regObj.data?.type}`);
+      }
+    } catch (e) {
+      console.error("validation failed before create_lesson", e);
+      throw e;
+    }
+
     const tx = new Transaction();
     const contentBytes = Array.from(new TextEncoder().encode(contentUri));
     const quizBytes = Array.from(new TextEncoder().encode(quizUri));
@@ -312,8 +404,8 @@ export function useCreateLesson() {
       target: `${PACKAGE_ID}::${MODULE_NAME}::create_lesson`,
       arguments: [
         tx.object(LESSON_REGISTRY_ID),
-        tx.object(courseId),
-        tx.object(capId),
+        tx.object(cid),
+        tx.object(cap),
         tx.pure(bcs.string().serialize(title)),
         tx.pure(bcs.vector(bcs.u8()).serialize(contentBytes)),
         tx.pure(bcs.vector(bcs.u8()).serialize(quizBytes)),
@@ -321,8 +413,8 @@ export function useCreateLesson() {
       ],
     });
     const result = await signAndExecute({ transaction: tx });
-    queryClient.invalidateQueries({ queryKey: ["lessons", courseId] });
-    queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+    queryClient.invalidateQueries({ queryKey: ["lessons", cid] });
+    queryClient.invalidateQueries({ queryKey: ["course", cid] });
     return result;
   };
 }
@@ -339,14 +431,16 @@ export function useCreateExercise() {
     maxScore: number,
     masteryThreshold: number
   ) => {
+    const lid = toStringId(lessonId);
+    const cap = toStringId(capId);
     const tx = new Transaction();
     const uriBytes = Array.from(new TextEncoder().encode(exerciseUri));
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::create_exercise`,
       arguments: [
         tx.object(EXERCISE_REGISTRY_ID),
-        tx.object(lessonId),
-        tx.object(capId),
+        tx.object(lid),
+        tx.object(cap),
         tx.pure(bcs.string().serialize(title)),
         tx.pure(bcs.vector(bcs.u8()).serialize(uriBytes)),
         tx.pure(bcs.u64().serialize(maxScore)),
@@ -354,7 +448,7 @@ export function useCreateExercise() {
       ],
     });
     const result = await signAndExecute({ transaction: tx });
-    queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
+    queryClient.invalidateQueries({ queryKey: ["exercises", lid] });
     queryClient.invalidateQueries({ queryKey: ["exerciseCounts"] });
     return result;
   };
@@ -365,13 +459,15 @@ export function useCompleteLesson() {
   const queryClient = useQueryClient();
 
   return async (courseId: string, lessonId: string, score: number) => {
+    const cid = toStringId(courseId);
+    const lid = toStringId(lessonId);
     const tx = new Transaction();
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::complete_lesson`,
       arguments: [
         tx.object(PROGRESS_REGISTRY_ID),
-        tx.object(courseId),
-        tx.object(lessonId),
+        tx.object(cid),
+        tx.object(lid),
         tx.pure(bcs.u64().serialize(score)),
       ],
     });
@@ -392,15 +488,18 @@ export function useSubmitExercise() {
     score: number,
     hintsUsed: number
   ) => {
+    const cid = toStringId(courseId);
+    const lid = toStringId(lessonId);
+    const eid = toStringId(exerciseId);
     const tx = new Transaction();
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::submit_exercise`,
       arguments: [
         tx.object(PROGRESS_REGISTRY_ID),
         tx.object(EXERCISE_REGISTRY_ID),
-        tx.object(courseId),
-        tx.object(lessonId),
-        tx.object(exerciseId),
+        tx.object(cid),
+        tx.object(lid),
+        tx.object(eid),
         tx.pure(bcs.u64().serialize(score)),
         tx.pure(bcs.u64().serialize(hintsUsed)),
       ],
@@ -417,19 +516,21 @@ export function useUpdateCourse() {
   const queryClient = useQueryClient();
 
   return async (courseId: string, capId: string, title: string, description: string) => {
+    const cid = toStringId(courseId);
+    const cap = toStringId(capId);
     const tx = new Transaction();
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::update_course`,
       arguments: [
-        tx.object(courseId),
-        tx.object(capId),
+        tx.object(cid),
+        tx.object(cap),
         tx.pure(bcs.string().serialize(title)),
         tx.pure(bcs.string().serialize(description)),
       ],
     });
     const result = await signAndExecute({ transaction: tx });
     queryClient.invalidateQueries({ queryKey: ["courses"] });
-    queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+    queryClient.invalidateQueries({ queryKey: ["course", cid] });
     return result;
   };
 }
@@ -446,22 +547,25 @@ export function useUpdateLesson() {
     contentUri: string,
     quizUri: string
   ) => {
+    const lid = toStringId(lessonId);
+    const cid = toStringId(courseId);
+    const cap = toStringId(capId);
     const tx = new Transaction();
     const contentBytes = Array.from(new TextEncoder().encode(contentUri));
     const quizBytes = Array.from(new TextEncoder().encode(quizUri));
     tx.moveCall({
       target: `${PACKAGE_ID}::${MODULE_NAME}::update_lesson`,
       arguments: [
-        tx.object(lessonId),
-        tx.object(courseId),
-        tx.object(capId),
+        tx.object(lid),
+        tx.object(cid),
+        tx.object(cap),
         tx.pure(bcs.string().serialize(title)),
         tx.pure(bcs.vector(bcs.u8()).serialize(contentBytes)),
         tx.pure(bcs.vector(bcs.u8()).serialize(quizBytes)),
       ],
     });
     const result = await signAndExecute({ transaction: tx });
-    queryClient.invalidateQueries({ queryKey: ["lessons", courseId] });
+    queryClient.invalidateQueries({ queryKey: ["lessons", cid] });
     return result;
   };
 }
@@ -471,6 +575,7 @@ export function useIssueCertificate() {
   const queryClient = useQueryClient();
 
   return async (courseId: string, imageUrl: string) => {
+    const cid = toStringId(courseId);
     const tx = new Transaction();
     const urlBytes = Array.from(new TextEncoder().encode(imageUrl));
     tx.moveCall({
@@ -478,7 +583,7 @@ export function useIssueCertificate() {
       arguments: [
         tx.object(CERTIFICATE_REGISTRY_ID),
         tx.object(PROGRESS_REGISTRY_ID),
-        tx.object(courseId),
+        tx.object(cid),
         tx.pure(bcs.vector(bcs.u8()).serialize(urlBytes)),
       ],
     });

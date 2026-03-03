@@ -17,3 +17,5 @@ export const exerciseType = `${PACKAGE_ID}::${MODULE_NAME}::Exercise`;
 export const progressType = `${PACKAGE_ID}::${MODULE_NAME}::Progress`;
 export const certificateType = `${PACKAGE_ID}::${MODULE_NAME}::Certificate`;
 export const courseOwnerCapType = `${PACKAGE_ID}::${MODULE_NAME}::CourseOwnerCap`;
+// placeholder for an administrator capability (not yet defined in the Move module)
+export const adminCapType = `${PACKAGE_ID}::${MODULE_NAME}::AdminCap`;
