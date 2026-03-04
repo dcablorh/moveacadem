@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { readBlob, AGGREGATOR_URL } from "@/lib/walrus";
 import { Loader2, ExternalLink } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { motion } from "framer-motion";
 
 interface WalrusContentProps {
   uri: string;
@@ -15,10 +16,18 @@ interface WalrusContentProps {
  * Extracts blobId from aggregator URLs, or treats as external link.
  * Renders content as Markdown by default.
  */
-export function WalrusContent({ uri, className, markdown = true }: WalrusContentProps) {
+export function WalrusContent({
+  uri,
+  className,
+  markdown = true,
+}: WalrusContentProps) {
   const blobId = extractBlobId(uri);
 
-  const { data: content, isLoading, error } = useQuery({
+  const {
+    data: content,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["walrus-blob", blobId],
     enabled: !!blobId,
     queryFn: () => readBlob(blobId!),
@@ -41,8 +50,44 @@ export function WalrusContent({ uri, className, markdown = true }: WalrusContent
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 py-4 text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading content from Walrus...
+      <div className="w-full space-y-5 py-4">
+        {/* Simulates a heading */}
+        <motion.div
+          initial={{ opacity: 0.5 }}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="h-8 w-2/5 rounded-lg bg-muted/60"
+        />
+        {/* Simulates a video or code block */}
+        <motion.div
+          initial={{ opacity: 0.5 }}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.2,
+          }}
+          className="h-48 w-full rounded-xl bg-muted/40"
+        />
+        {/* Simulates paragraphs */}
+        <div className="space-y-3">
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
+            className="h-4 w-full rounded bg-muted/50"
+          />
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+            className="h-4 w-[90%] rounded bg-muted/50"
+          />
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
+            className="h-4 w-[75%] rounded bg-muted/50"
+          />
+        </div>
       </div>
     );
   }
@@ -58,7 +103,8 @@ export function WalrusContent({ uri, className, markdown = true }: WalrusContent
   if (!content) return null;
 
   // Determine if content looks like Markdown
-  const looksLikeMarkdown = /^#{1,6}\s|^\*\*|\*\s|^-\s|^\d+\.\s|```|\[.*\]\(/.test(String(content));
+  const looksLikeMarkdown =
+    /^#{1,6}\s|^\*\*|\*\s|^-\s|^\d+\.\s|```|\[.*\]\(/.test(String(content));
   const shouldRenderMarkdown = markdown && looksLikeMarkdown;
 
   return (

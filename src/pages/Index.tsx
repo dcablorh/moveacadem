@@ -3,7 +3,11 @@ import { motion } from "framer-motion";
 import { BookOpen, Trophy, Zap, Shield, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import { useCourses, useStudentProgress, useStudentCertificates } from "@/hooks/useAcademy";
+import {
+  useCourses,
+  useStudentProgress,
+  useStudentCertificates,
+} from "@/hooks/useAcademy";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { ProgressRing } from "@/components/progress/ProgressRing";
 
@@ -11,22 +15,26 @@ const features = [
   {
     icon: BookOpen,
     title: "Structured Courses",
-    description: "Learn Move programming through curated courses with lessons, exercises, and quizzes.",
+    description:
+      "Learn Move programming through curated courses with lessons, exercises, and quizzes.",
   },
   {
     icon: Zap,
     title: "Khan-Style Mastery",
-    description: "Practice exercises until mastery. Track your progress and level up your skills.",
+    description:
+      "Practice exercises until mastery. Track your progress and level up your skills.",
   },
   {
     icon: Trophy,
     title: "Soulbound Certificates",
-    description: "Earn on-chain certificates as NFTs that prove your accomplishments forever.",
+    description:
+      "Earn on-chain certificates as NFTs that prove your accomplishments forever.",
   },
   {
     icon: Shield,
     title: "Powered by Sui",
-    description: "All progress and certificates are stored immutably on the Sui blockchain.",
+    description:
+      "All progress and certificates are stored immutably on the Sui blockchain.",
   },
 ];
 
@@ -56,21 +64,43 @@ const Index = () => {
               <span className="text-gradient-primary">Earn On-Chain.</span>
             </h1>
             <p className="mb-8 max-w-xl text-lg text-primary-foreground/70">
-              The decentralized learning platform where you practice until mastery,
-              track your progress on-chain, and earn soulbound certificate NFTs.
+              The decentralized learning platform where you practice until
+              mastery, track your progress on-chain, and earn soulbound
+              certificate NFTs.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link
-                to="/courses"
-                className="btn-primary-gradient inline-flex items-center gap-2 rounded-xl px-6 py-3 font-display font-semibold"
-              >
-                Explore Courses
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              {progress && progress.length > 0 && courses ? (
+                (() => {
+                  const lastProgress = progress[progress.length - 1] as any;
+                  const activeCourseId = lastProgress?.course_id;
+                  const activeCourse = courses.find(
+                    (c: any) => c.id === activeCourseId,
+                  ) as any;
+
+                  return (
+                    <Link
+                      to={`/course/${activeCourseId}`}
+                      className="btn-primary-gradient inline-flex items-center gap-2 rounded-xl px-6 py-3 font-display font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5"
+                    >
+                      <Zap className="h-4 w-4 fill-current text-yellow-300" />
+                      Resume: {activeCourse?.title || "Your Course"}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  );
+                })()
+              ) : (
+                <Link
+                  to="/courses"
+                  className="btn-primary-gradient inline-flex items-center gap-2 rounded-xl px-6 py-3 font-display font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                >
+                  Explore Courses
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
               {account && (
                 <Link
                   to="/create"
-                  className="inline-flex items-center gap-2 rounded-xl border border-primary-foreground/20 bg-primary-foreground/5 px-6 py-3 font-display font-semibold text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+                  className="inline-flex items-center gap-2 rounded-xl border border-primary-foreground/20 bg-primary-foreground/5 px-6 py-3 font-display font-semibold text-primary-foreground transition-all hover:bg-primary-foreground/10 hover:-translate-y-0.5"
                 >
                   Create a Course
                 </Link>
@@ -85,18 +115,36 @@ const Index = () => {
         <section className="border-b border-border bg-card">
           <div className="container mx-auto flex flex-wrap items-center justify-center gap-8 px-4 py-6 md:gap-16">
             <div className="flex items-center gap-3">
-              <ProgressRing progress={progress?.length ? Math.min((progress.length / 10) * 100, 100) : 0} size={56} strokeWidth={4} />
+              <ProgressRing
+                progress={
+                  progress?.length
+                    ? Math.min((progress.length / 10) * 100, 100)
+                    : 0
+                }
+                size={56}
+                strokeWidth={4}
+              />
               <div>
-                <p className="text-2xl font-display font-bold text-foreground">{progress?.length || 0}</p>
-                <p className="text-xs text-muted-foreground">Lessons Completed</p>
+                <p className="text-2xl font-display font-bold text-foreground">
+                  {progress?.length || 0}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Lessons Completed
+                </p>
               </div>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-display font-bold text-foreground">{certificates?.length || 0}</p>
-              <p className="text-xs text-muted-foreground">Certificates Earned</p>
+              <p className="text-2xl font-display font-bold text-foreground">
+                {certificates?.length || 0}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Certificates Earned
+              </p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-display font-bold text-foreground">{courses?.length || 0}</p>
+              <p className="text-2xl font-display font-bold text-foreground">
+                {courses?.filter((c: any) => c.published).length || 0}
+              </p>
               <p className="text-xs text-muted-foreground">Courses Available</p>
             </div>
           </div>
@@ -135,7 +183,9 @@ const Index = () => {
               <h3 className="mb-2 font-display font-semibold text-card-foreground">
                 {feature.title}
               </h3>
-              <p className="text-sm text-muted-foreground">{feature.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {feature.description}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -163,17 +213,23 @@ const Index = () => {
           </div>
         ) : courses && courses.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {courses.filter((c: any) => c.published).slice(0, 6).map((course: any) => (
-              <CourseCard
-                key={course.id}
-                id={course.id}
-                title={course.title}
-                description={course.description}
-                creator={course.creator}
-                lessonCount={Number(course.lesson_count)}
-                published={course.published}
-              />
-            ))}
+            {courses
+              .filter(
+                (c: any) =>
+                  c.published || (account && c.creator === account.address),
+              )
+              .slice(0, 6)
+              .map((course: any) => (
+                <CourseCard
+                  key={course.id}
+                  id={course.id}
+                  title={course.title}
+                  description={course.description}
+                  creator={course.creator}
+                  lessonCount={Number(course.lesson_count)}
+                  published={course.published}
+                />
+              ))}
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-muted/30 p-12 text-center">
@@ -197,8 +253,12 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t border-border bg-card py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p className="font-display font-medium text-foreground">Move Academy</p>
-          <p className="mt-1">Decentralized learning on Sui. All progress stored on-chain.</p>
+          <p className="font-display font-medium text-foreground">
+            Move Academy
+          </p>
+          <p className="mt-1">
+            Decentralized learning on Sui. All progress stored on-chain.
+          </p>
         </div>
       </footer>
     </Layout>

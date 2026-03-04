@@ -1,4 +1,8 @@
-import { useSuiClient, useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import {
+  useSuiClient,
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { bcs } from "@mysten/sui/bcs";
@@ -13,6 +17,7 @@ import {
   progressType,
   certificateType,
   courseOwnerCapType,
+  adminCapType,
 } from "@/config/sui";
 
 /**
@@ -24,7 +29,7 @@ import {
  * the UID struct overwrites it and every downstream `.id` lookup breaks
  * (e.g. `normalizeSuiAddress` can't call `.toLowerCase()` on an object).
  */
-function extractFields(objectId: string, fields: Record<string, any>) {
+function extractFields(objectId: string, fields: Record<string, any>): any {
   // Spread fields first, then override id with the raw objectId string.
   const { id: _uid, ...rest } = fields;
   return { ...rest, id: objectId };
@@ -36,7 +41,8 @@ function extractFields(objectId: string, fields: Record<string, any>) {
  */
 function toStringId(value: any): string {
   if (typeof value === "string") return value;
-  if (value && typeof value === "object" && typeof value.id === "string") return value.id;
+  if (value && typeof value === "object" && typeof value.id === "string")
+    return value.id;
   throw new Error(`Invalid object ID: ${JSON.stringify(value)}`);
 }
 
@@ -47,10 +53,12 @@ export function useCourses() {
     queryKey: ["courses"],
     queryFn: async () => {
       const result = await client.queryEvents({
-        query: { MoveEventType: `${PACKAGE_ID}::${MODULE_NAME}::CourseCreated` },
+        query: {
+          MoveEventType: `${PACKAGE_ID}::${MODULE_NAME}::CourseCreated`,
+        },
         limit: 50,
       });
-      
+
       const courses = await Promise.all(
         result.data.map(async (event) => {
           const parsed = event.parsedJson as any;
@@ -60,13 +68,16 @@ export function useCourses() {
               options: { showContent: true },
             });
             if (obj.data?.content?.dataType === "moveObject") {
-              return extractFields(parsed.course_id, obj.data.content.fields as any);
+              return extractFields(
+                parsed.course_id,
+                obj.data.content.fields as any,
+              );
             }
           } catch {
             return null;
           }
           return null;
-        })
+        }),
       );
       return courses.filter(Boolean);
     },
@@ -100,14 +111,16 @@ export function useCourseLessons(courseId: string | undefined) {
     enabled: !!courseId,
     queryFn: async () => {
       const result = await client.queryEvents({
-        query: { MoveEventType: `${PACKAGE_ID}::${MODULE_NAME}::LessonCreated` },
+        query: {
+          MoveEventType: `${PACKAGE_ID}::${MODULE_NAME}::LessonCreated`,
+        },
         limit: 100,
       });
-      
+
       const lessonEvents = result.data.filter(
-        (e) => (e.parsedJson as any).course_id === courseId
+        (e) => (e.parsedJson as any).course_id === courseId,
       );
-      
+
       const lessons = await Promise.all(
         lessonEvents.map(async (event) => {
           const parsed = event.parsedJson as any;
@@ -117,15 +130,20 @@ export function useCourseLessons(courseId: string | undefined) {
               options: { showContent: true },
             });
             if (obj.data?.content?.dataType === "moveObject") {
-              return extractFields(parsed.lesson_id, obj.data.content.fields as any);
+              return extractFields(
+                parsed.lesson_id,
+                obj.data.content.fields as any,
+              );
             }
           } catch {
             return null;
           }
           return null;
-        })
+        }),
       );
-      return lessons.filter(Boolean).sort((a: any, b: any) => Number(a.order) - Number(b.order));
+      return lessons
+        .filter(Boolean)
+        .sort((a: any, b: any) => Number(a.order) - Number(b.order));
     },
   });
 }
@@ -138,14 +156,16 @@ export function useLessonExercises(lessonId: string | undefined) {
     enabled: !!lessonId,
     queryFn: async () => {
       const result = await client.queryEvents({
-        query: { MoveEventType: `${PACKAGE_ID}::${MODULE_NAME}::ExerciseCreated` },
+        query: {
+          MoveEventType: `${PACKAGE_ID}::${MODULE_NAME}::ExerciseCreated`,
+        },
         limit: 100,
       });
-      
+
       const exEvents = result.data.filter(
-        (e) => (e.parsedJson as any).lesson_id === lessonId
+        (e) => (e.parsedJson as any).lesson_id === lessonId,
       );
-      
+
       const exercises = await Promise.all(
         exEvents.map(async (event) => {
           const parsed = event.parsedJson as any;
@@ -155,13 +175,16 @@ export function useLessonExercises(lessonId: string | undefined) {
               options: { showContent: true },
             });
             if (obj.data?.content?.dataType === "moveObject") {
-              return extractFields(parsed.exercise_id, obj.data.content.fields as any);
+              return extractFields(
+                parsed.exercise_id,
+                obj.data.content.fields as any,
+              );
             }
           } catch {
             return null;
           }
           return null;
-        })
+        }),
       );
       return exercises.filter(Boolean);
     },
@@ -176,7 +199,9 @@ export function useCourseExerciseCounts(courseId: string | undefined) {
     enabled: !!courseId,
     queryFn: async () => {
       const result = await client.queryEvents({
-        query: { MoveEventType: `${PACKAGE_ID}::${MODULE_NAME}::ExerciseCreated` },
+        query: {
+          MoveEventType: `${PACKAGE_ID}::${MODULE_NAME}::ExerciseCreated`,
+        },
         limit: 200,
       });
 
@@ -208,12 +233,14 @@ export function useStudentProgress() {
         filter: { StructType: progressType },
         options: { showContent: true },
       });
-      return objects.data.map((o) => {
-        if (o.data?.content?.dataType === "moveObject") {
-          return extractFields(o.data.objectId, o.data.content.fields as any);
-        }
-        return null;
-      }).filter(Boolean);
+      return objects.data
+        .map((o) => {
+          if (o.data?.content?.dataType === "moveObject") {
+            return extractFields(o.data.objectId, o.data.content.fields as any);
+          }
+          return null;
+        })
+        .filter(Boolean);
     },
   });
 }
@@ -231,12 +258,14 @@ export function useStudentCertificates() {
         filter: { StructType: certificateType },
         options: { showContent: true },
       });
-      return objects.data.map((o) => {
-        if (o.data?.content?.dataType === "moveObject") {
-          return extractFields(o.data.objectId, o.data.content.fields as any);
-        }
-        return null;
-      }).filter(Boolean);
+      return objects.data
+        .map((o) => {
+          if (o.data?.content?.dataType === "moveObject") {
+            return extractFields(o.data.objectId, o.data.content.fields as any);
+          }
+          return null;
+        })
+        .filter(Boolean);
     },
   });
 }
@@ -254,12 +283,14 @@ export function useOwnerCaps() {
         filter: { StructType: courseOwnerCapType },
         options: { showContent: true },
       });
-      return objects.data.map((o) => {
-        if (o.data?.content?.dataType === "moveObject") {
-          return extractFields(o.data.objectId, o.data.content.fields as any);
-        }
-        return null;
-      }).filter(Boolean);
+      return objects.data
+        .map((o) => {
+          if (o.data?.content?.dataType === "moveObject") {
+            return extractFields(o.data.objectId, o.data.content.fields as any);
+          }
+          return null;
+        })
+        .filter(Boolean);
     },
   });
 }
@@ -277,12 +308,14 @@ export function useAdminCaps() {
         filter: { StructType: adminCapType },
         options: { showContent: true },
       });
-      return objects.data.map((o) => {
-        if (o.data?.content?.dataType === "moveObject") {
-          return extractFields(o.data.objectId, o.data.content.fields as any);
-        }
-        return null;
-      }).filter(Boolean);
+      return objects.data
+        .map((o) => {
+          if (o.data?.content?.dataType === "moveObject") {
+            return extractFields(o.data.objectId, o.data.content.fields as any);
+          }
+          return null;
+        })
+        .filter(Boolean);
     },
   });
 }
@@ -314,8 +347,10 @@ export function useCreateCourse() {
         options: { showObjectChanges: true },
       });
       const created = txDetails.objectChanges?.find(
-        (c: any) => c.type === "created" && c.objectType?.includes("::Course")
-        && !c.objectType?.includes("CourseOwnerCap")
+        (c: any) =>
+          c.type === "created" &&
+          c.objectType?.includes("::Course") &&
+          !c.objectType?.includes("CourseOwnerCap"),
       );
       return (created as any)?.objectId || null;
     } catch {
@@ -354,7 +389,7 @@ export function useCreateLesson() {
     title: string,
     contentUri: string,
     quizUri: string,
-    order: number
+    order: number,
   ) => {
     const cid = toStringId(courseId);
     const cap = toStringId(capId);
@@ -390,7 +425,9 @@ export function useCreateLesson() {
         throw new Error(`Expected cap object, got ${capObj.data?.type}`);
       }
       if (!regObj.data?.type?.includes("::LessonRegistry")) {
-        throw new Error(`Expected lesson registry object, got ${regObj.data?.type}`);
+        throw new Error(
+          `Expected lesson registry object, got ${regObj.data?.type}`,
+        );
       }
     } catch (e) {
       console.error("validation failed before create_lesson", e);
@@ -429,7 +466,7 @@ export function useCreateExercise() {
     title: string,
     exerciseUri: string,
     maxScore: number,
-    masteryThreshold: number
+    masteryThreshold: number,
   ) => {
     const lid = toStringId(lessonId);
     const cap = toStringId(capId);
@@ -455,6 +492,7 @@ export function useCreateExercise() {
 }
 
 export function useCompleteLesson() {
+  const client = useSuiClient();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const queryClient = useQueryClient();
 
@@ -472,12 +510,17 @@ export function useCompleteLesson() {
       ],
     });
     const result = await signAndExecute({ transaction: tx });
+    const txDetails = await client.waitForTransaction({
+      digest: result.digest,
+      options: { showEvents: true },
+    });
     queryClient.invalidateQueries({ queryKey: ["progress"] });
-    return result;
+    return txDetails;
   };
 }
 
 export function useSubmitExercise() {
+  const client = useSuiClient();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const queryClient = useQueryClient();
 
@@ -486,7 +529,7 @@ export function useSubmitExercise() {
     lessonId: string,
     exerciseId: string,
     score: number,
-    hintsUsed: number
+    hintsUsed: number,
   ) => {
     const cid = toStringId(courseId);
     const lid = toStringId(lessonId);
@@ -505,9 +548,13 @@ export function useSubmitExercise() {
       ],
     });
     const result = await signAndExecute({ transaction: tx });
+    const txDetails = await client.waitForTransaction({
+      digest: result.digest,
+      options: { showEvents: true },
+    });
     queryClient.invalidateQueries({ queryKey: ["progress"] });
     queryClient.invalidateQueries({ queryKey: ["exercises"] });
-    return result;
+    return txDetails;
   };
 }
 
@@ -515,7 +562,12 @@ export function useUpdateCourse() {
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const queryClient = useQueryClient();
 
-  return async (courseId: string, capId: string, title: string, description: string) => {
+  return async (
+    courseId: string,
+    capId: string,
+    title: string,
+    description: string,
+  ) => {
     const cid = toStringId(courseId);
     const cap = toStringId(capId);
     const tx = new Transaction();
@@ -545,7 +597,7 @@ export function useUpdateLesson() {
     capId: string,
     title: string,
     contentUri: string,
-    quizUri: string
+    quizUri: string,
   ) => {
     const lid = toStringId(lessonId);
     const cid = toStringId(courseId);
@@ -571,6 +623,7 @@ export function useUpdateLesson() {
 }
 
 export function useIssueCertificate() {
+  const client = useSuiClient();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const queryClient = useQueryClient();
 
@@ -588,7 +641,11 @@ export function useIssueCertificate() {
       ],
     });
     const result = await signAndExecute({ transaction: tx });
+    const txDetails = await client.waitForTransaction({
+      digest: result.digest,
+      options: { showEvents: true },
+    });
     queryClient.invalidateQueries({ queryKey: ["certificates"] });
-    return result;
+    return txDetails;
   };
 }

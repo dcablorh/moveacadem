@@ -20,33 +20,38 @@ export default function CoursesPage() {
   const filtered = courses
     ? Array.from(
         new Map(
-          courses.map((c: any) => [String(c.id), { ...c, id: String(c.id) }])
-        ).values()
+          courses.map((c: any) => [String(c.id), { ...c, id: String(c.id) }]),
+        ).values(),
       ).filter((c: any) => {
         const matchesSearch =
           c.title?.toLowerCase().includes(search.toLowerCase()) ||
           c.description?.toLowerCase().includes(search.toLowerCase());
-        const matchesTab =
-          tab === "all" || (tab === "mine" && ownedCourseIds.has(c.id));
+        const isOwner = ownedCourseIds.has(c.id);
+        const isVisible = c.published || isOwner;
+        const matchesTab = tab === "mine" ? isOwner : isVisible;
         return matchesSearch && matchesTab;
       })
     : undefined;
 
-  const myCourseCount = courses?.filter(
-    (c: any) => ownedCourseIds.has(c.id)
-  )?.length || 0;
+  const myCourseCount =
+    courses?.filter((c: any) => ownedCourseIds.has(c.id))?.length || 0;
 
   return (
     <Layout>
       <div className="container mx-auto px-4 py-10">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1 className="mb-1 font-display text-3xl font-bold text-foreground">
                 {tab === "mine" ? "My Courses" : "Courses"}
               </h1>
               <p className="text-muted-foreground">
-                {tab === "mine" ? "Manage and build your courses" : "Browse community courses or manage your own"}
+                {tab === "mine"
+                  ? "Manage and build your courses"
+                  : "Browse community courses or manage your own"}
               </p>
             </div>
             {account && (
@@ -65,7 +70,9 @@ export default function CoursesPage() {
               <button
                 onClick={() => setTab("all")}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
-                  tab === "all" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                  tab === "all"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground"
                 }`}
               >
                 <BookOpen className="h-4 w-4" /> All
@@ -73,7 +80,9 @@ export default function CoursesPage() {
               <button
                 onClick={() => setTab("mine")}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
-                  tab === "mine" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                  tab === "mine"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground"
                 }`}
               >
                 <Settings className="h-4 w-4" /> My Courses

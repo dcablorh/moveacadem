@@ -25,14 +25,16 @@ export default function CertificateDetailPage() {
   const decodeField = (field: any): string => {
     if (!field) return "";
     if (typeof field === "string") return field;
-    if (Array.isArray(field)) return new TextDecoder().decode(new Uint8Array(field));
+    if (Array.isArray(field))
+      return new TextDecoder().decode(new Uint8Array(field));
     return String(field);
   };
 
   const courseTitle = decodeField(cert?.course_title);
   const imageUrl = decodeField(cert?.image_url);
   const student = cert?.student || "";
-  const certObjectId = typeof cert?.id === "string" ? cert.id : String(cert?.id || "");
+  const certObjectId =
+    typeof cert?.id === "string" ? cert.id : String(cert?.id || "");
 
   // Issued epoch → approximate date
   const issuedEpoch = cert?.issued_at ? Number(cert.issued_at) : null;
@@ -44,20 +46,29 @@ export default function CertificateDetailPage() {
 
   const handleShareTwitter = () => {
     const text = encodeURIComponent(
-      `I just earned a certificate for "${courseTitle}" on Move Academy! 🎓 #MoveAcademy #Web3 #Sui`
+      `I just earned a certificate for "${courseTitle}" on Move Academy! 🎓 #MoveAcademy #Web3 #Sui`,
     );
     const url = encodeURIComponent(window.location.href);
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank");
+    window.open(
+      `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+      "_blank",
+    );
   };
 
   const handleShareLinkedIn = () => {
     const url = encodeURIComponent(window.location.href);
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank");
+    window.open(
+      `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+      "_blank",
+    );
   };
 
   const handleVerifyOnChain = () => {
     if (certObjectId) {
-      window.open(`https://suiscan.xyz/testnet/object/${certObjectId}`, "_blank");
+      window.open(
+        `https://suiscan.xyz/testnet/object/${certObjectId}`,
+        "_blank",
+      );
     }
   };
 
