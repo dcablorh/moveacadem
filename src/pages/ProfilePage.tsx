@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 import { useStudentProgress, useStudentCertificates, useOwnerCaps } from "@/hooks/useAcademy";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { ProgressRing } from "@/components/progress/ProgressRing";
