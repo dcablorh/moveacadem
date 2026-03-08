@@ -56,7 +56,7 @@ export function Navbar() {
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center border-2 border-border bg-primary shadow-brutal-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-border bg-primary shadow-brutal-sm">
             <BookOpen className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="hidden font-display text-sm font-bold uppercase tracking-tight text-foreground sm:block">
@@ -76,7 +76,7 @@ export function Navbar() {
             <div className="relative" ref={moreRef}>
               <button
                 onClick={() => setMoreOpen(!moreOpen)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all ${
                   moreHasActive
                     ? "border-2 border-border bg-primary text-primary-foreground shadow-brutal-sm"
                     : "border-2 border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:shadow-brutal-sm"
@@ -93,7 +93,7 @@ export function Navbar() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.1 }}
-                    className="absolute right-0 top-full mt-1 w-48 border-2 border-border bg-card shadow-brutal-sm z-50"
+                    className="absolute right-0 top-full mt-1 w-48 rounded-lg border-2 border-border bg-card shadow-brutal-sm z-50 overflow-hidden"
                   >
                     {moreLinks.map((link) => (
                       <Link
@@ -120,7 +120,7 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           <ConnectButton />
           <button
-            className="flex h-8 w-8 items-center justify-center border-2 border-border bg-card text-foreground shadow-brutal-sm transition-all hover:bg-muted active:shadow-none active:translate-x-0.5 active:translate-y-0.5 md:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-border bg-card text-foreground shadow-brutal-sm transition-all hover:bg-muted active:shadow-none active:translate-x-0.5 active:translate-y-0.5 md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
@@ -163,7 +163,7 @@ function NavItem({ to, label, icon: Icon, active }: { to: string; label: string;
   return (
     <Link
       to={to}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all ${
+      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all ${
         active
           ? "border-2 border-border bg-primary text-primary-foreground shadow-brutal-sm"
           : "border-2 border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:shadow-brutal-sm"
@@ -180,7 +180,7 @@ function MobileNavItem({ to, label, icon: Icon, active, onClick }: { to: string;
     <Link
       to={to}
       onClick={onClick}
-      className={`flex items-center gap-3 border-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all ${
+      className={`flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all ${
         active
           ? "border-border bg-primary text-primary-foreground shadow-brutal-sm"
           : "border-transparent text-muted-foreground hover:border-border hover:bg-muted"
