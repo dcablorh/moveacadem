@@ -657,7 +657,14 @@ export default function LessonViewPage() {
 
   return (
     <Layout>
-      <div className="container mx-auto max-w-6xl px-4 py-8 flex flex-col md:flex-row gap-8">
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <PageBreadcrumb items={[
+          { label: "Home", to: "/" },
+          { label: "Courses", to: "/courses" },
+          { label: course?.title || "Course", to: `/course/${courseId}` },
+          { label: lesson?.title || "Lesson" },
+        ]} />
+        <div className="flex flex-col md:flex-row gap-8">
         {/* Adaptive Sidebar */}
         <aside className="w-full md:w-64 shrink-0 order-2 md:order-1 self-start sticky top-8 space-y-4">
           <div className="rounded-xl border border-border bg-card p-4">
