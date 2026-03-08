@@ -40,7 +40,7 @@ export default function CoursesPage() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-10">
-        <motion.div
+        <PageBreadcrumb />
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
