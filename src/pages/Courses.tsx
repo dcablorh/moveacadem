@@ -88,7 +88,7 @@ export default function CoursesPage() {
               >
                 <Settings className="h-4 w-4" /> My Courses
                 {myCourseCount > 0 && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                  <span className="border-2 border-border bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
                     {myCourseCount}
                   </span>
                 )}
