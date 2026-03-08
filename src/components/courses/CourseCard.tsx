@@ -17,33 +17,33 @@ export function CourseCard({ id, title, description, creator, lessonCount, publi
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      whileHover={{ x: -2, y: -2 }}
+      transition={{ type: "tween", duration: 0.1 }}
     >
       <Link to={`/course/${id}`} className="block">
-        <div className="group relative overflow-hidden rounded-xl border border-border bg-card shadow-card transition-shadow hover:shadow-card-hover">
+        <div className="group relative overflow-hidden border-2 border-border bg-card shadow-brutal neo-hover">
           {/* Color bar */}
-          <div className={`h-2 w-full ${published ? "bg-primary" : "bg-accent"}`} />
+          <div className={`h-3 w-full ${published ? "bg-primary" : "bg-secondary"}`} />
           
           <div className="p-5">
             <div className="mb-3 flex items-center gap-2">
               {published ? (
-                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                  Published
+                <span className="border-2 border-border bg-primary/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-primary">
+                  Live
                 </span>
               ) : (
-                <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent">
+                <span className="border-2 border-border bg-secondary/30 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-secondary-foreground">
                   Draft
                 </span>
               )}
               {isOwner && (
-                <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                <span className="border-2 border-border bg-muted px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
                   <Settings className="mr-0.5 inline h-3 w-3" /> Owner
                 </span>
               )}
             </div>
 
-            <h3 className="mb-2 font-display text-lg font-semibold text-card-foreground line-clamp-1 group-hover:text-primary transition-colors">
+            <h3 className="mb-2 font-display text-lg font-bold uppercase text-card-foreground">
               {title}
             </h3>
             
@@ -51,8 +51,8 @@ export function CourseCard({ id, title, description, creator, lessonCount, publi
               {description}
             </p>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between border-t-2 border-border pt-3">
+              <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <BookOpen className="h-3.5 w-3.5" />
                   {lessonCount} lessons
@@ -63,7 +63,7 @@ export function CourseCard({ id, title, description, creator, lessonCount, publi
                 </span>
               </div>
               {isOwner && (
-                <span className="text-xs font-medium text-primary">
+                <span className="text-xs font-bold uppercase text-primary">
                   Manage →
                 </span>
               )}

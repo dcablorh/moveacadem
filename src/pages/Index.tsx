@@ -15,26 +15,22 @@ const features = [
   {
     icon: BookOpen,
     title: "Structured Courses",
-    description:
-      "Learn Move programming through curated courses with lessons, exercises, and quizzes.",
+    description: "Learn Move programming through curated courses with lessons, exercises, and quizzes.",
   },
   {
     icon: Zap,
     title: "Khan-Style Mastery",
-    description:
-      "Practice exercises until mastery. Track your progress and level up your skills.",
+    description: "Practice exercises until mastery. Track your progress and level up your skills.",
   },
   {
     icon: Trophy,
     title: "Soulbound Certificates",
-    description:
-      "Earn on-chain certificates as NFTs that prove your accomplishments forever.",
+    description: "Earn on-chain certificates as NFTs that prove your accomplishments forever.",
   },
   {
     icon: Shield,
     title: "Powered by Sui",
-    description:
-      "All progress and certificates are stored immutably on the Sui blockchain.",
+    description: "All progress and certificates are stored immutably on the Sui blockchain.",
   },
 ];
 
@@ -47,23 +43,22 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="hero-gradient relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(162_63%_41%/0.12),transparent_60%)]" />
+      <section className="border-b-2 border-border bg-card">
         <div className="container mx-auto px-4 py-20 md:py-28">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="relative z-10 max-w-3xl"
+            transition={{ duration: 0.4 }}
+            className="max-w-3xl"
           >
-            <span className="mb-4 inline-block rounded-full border border-emerald/30 bg-emerald/10 px-4 py-1.5 text-sm font-medium text-emerald-glow">
+            <span className="mb-4 inline-block border-2 border-border bg-primary/10 px-4 py-1.5 font-display text-sm font-bold uppercase tracking-wide text-primary shadow-brutal-sm">
               Learn Move on Sui
             </span>
-            <h1 className="mb-6 font-display text-4xl font-bold leading-tight text-primary-foreground md:text-6xl">
+            <h1 className="mb-6 font-display text-4xl font-bold uppercase leading-tight text-foreground md:text-6xl">
               Master Move.{" "}
-              <span className="text-gradient-primary">Earn On-Chain.</span>
+              <span className="text-primary">Earn On-Chain.</span>
             </h1>
-            <p className="mb-8 max-w-xl text-lg text-primary-foreground/70">
+            <p className="mb-8 max-w-xl text-lg text-muted-foreground">
               The decentralized learning platform where you practice until
               mastery, track your progress on-chain, and earn soulbound
               certificate NFTs.
@@ -80,9 +75,9 @@ const Index = () => {
                   return (
                     <Link
                       to={`/course/${activeCourseId}`}
-                      className="btn-primary-gradient inline-flex items-center gap-2 rounded-xl px-6 py-3 font-display font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5"
+                      className="btn-primary-gradient inline-flex items-center gap-2 px-6 py-3 text-sm font-bold"
                     >
-                      <Zap className="h-4 w-4 fill-current text-yellow-300" />
+                      <Zap className="h-4 w-4" />
                       Resume: {activeCourse?.title || "Your Course"}
                       <ArrowRight className="h-4 w-4" />
                     </Link>
@@ -91,7 +86,7 @@ const Index = () => {
               ) : (
                 <Link
                   to="/courses"
-                  className="btn-primary-gradient inline-flex items-center gap-2 rounded-xl px-6 py-3 font-display font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                  className="btn-primary-gradient inline-flex items-center gap-2 px-6 py-3 text-sm font-bold"
                 >
                   Explore Courses
                   <ArrowRight className="h-4 w-4" />
@@ -100,7 +95,7 @@ const Index = () => {
               {account && (
                 <Link
                   to="/create"
-                  className="inline-flex items-center gap-2 rounded-xl border border-primary-foreground/20 bg-primary-foreground/5 px-6 py-3 font-display font-semibold text-primary-foreground transition-all hover:bg-primary-foreground/10 hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 border-2 border-border bg-card px-6 py-3 font-display text-sm font-bold uppercase text-foreground shadow-brutal-sm transition-all hover:shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5"
                 >
                   Create a Course
                 </Link>
@@ -112,7 +107,7 @@ const Index = () => {
 
       {/* Stats bar for connected users */}
       {account && (
-        <section className="border-b border-border bg-card">
+        <section className="border-b-2 border-border bg-background">
           <div className="container mx-auto flex flex-wrap items-center justify-center gap-8 px-4 py-6 md:gap-16">
             <div className="flex items-center gap-3">
               <ProgressRing
@@ -125,27 +120,29 @@ const Index = () => {
                 strokeWidth={4}
               />
               <div>
-                <p className="text-2xl font-display font-bold text-foreground">
+                <p className="font-display text-2xl font-bold text-foreground">
                   {progress?.length || 0}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Lessons Completed
+                <p className="text-xs font-bold uppercase text-muted-foreground">
+                  Lessons Done
                 </p>
               </div>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-display font-bold text-foreground">
+              <p className="font-display text-2xl font-bold text-foreground">
                 {certificates?.length || 0}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Certificates Earned
+              <p className="text-xs font-bold uppercase text-muted-foreground">
+                Certificates
               </p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-display font-bold text-foreground">
+              <p className="font-display text-2xl font-bold text-foreground">
                 {courses?.filter((c: any) => c.published).length || 0}
               </p>
-              <p className="text-xs text-muted-foreground">Courses Available</p>
+              <p className="text-xs font-bold uppercase text-muted-foreground">
+                Courses Live
+              </p>
             </div>
           </div>
         </section>
@@ -159,7 +156,7 @@ const Index = () => {
           viewport={{ once: true }}
           className="mb-12 text-center"
         >
-          <h2 className="mb-3 font-display text-3xl font-bold text-foreground">
+          <h2 className="mb-3 font-display text-3xl font-bold uppercase text-foreground">
             Why Move Academy?
           </h2>
           <p className="text-muted-foreground">
@@ -175,12 +172,12 @@ const Index = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="rounded-xl border border-border bg-card p-6 shadow-card transition-shadow hover:shadow-card-hover"
+              className="border-2 border-border bg-card p-6 shadow-brutal neo-hover"
             >
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10">
+              <div className="mb-4 flex h-11 w-11 items-center justify-center border-2 border-border bg-primary/10">
                 <feature.icon className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="mb-2 font-display font-semibold text-card-foreground">
+              <h3 className="mb-2 font-display text-sm font-bold uppercase text-card-foreground">
                 {feature.title}
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -194,12 +191,12 @@ const Index = () => {
       {/* Recent Courses */}
       <section className="container mx-auto px-4 py-16">
         <div className="mb-8 flex items-center justify-between">
-          <h2 className="font-display text-2xl font-bold text-foreground">
+          <h2 className="font-display text-2xl font-bold uppercase text-foreground">
             Recent Courses
           </h2>
           <Link
             to="/courses"
-            className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+            className="flex items-center gap-1 font-display text-sm font-bold uppercase text-primary hover:underline"
           >
             View all <ArrowRight className="h-3.5 w-3.5" />
           </Link>
@@ -208,7 +205,7 @@ const Index = () => {
         {isLoading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 animate-pulse rounded-xl bg-muted" />
+              <div key={i} className="h-48 animate-pulse border-2 border-border bg-muted" />
             ))}
           </div>
         ) : courses && courses.length > 0 ? (
@@ -232,9 +229,9 @@ const Index = () => {
               ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-border bg-muted/30 p-12 text-center">
+          <div className="border-2 border-dashed border-border bg-muted/30 p-12 text-center">
             <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 font-display text-lg font-semibold text-foreground">
+            <h3 className="mb-2 font-display text-lg font-bold uppercase text-foreground">
               No courses yet
             </h3>
             <p className="mb-4 text-sm text-muted-foreground">
@@ -242,7 +239,7 @@ const Index = () => {
             </p>
             <Link
               to="/create"
-              className="btn-primary-gradient inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold"
+              className="btn-primary-gradient inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold"
             >
               Create Course
             </Link>
@@ -251,9 +248,9 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-card py-8">
+      <footer className="border-t-2 border-border bg-card py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p className="font-display font-medium text-foreground">
+          <p className="font-display font-bold uppercase text-foreground">
             Move Academy
           </p>
           <p className="mt-1">
