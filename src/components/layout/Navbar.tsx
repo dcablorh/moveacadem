@@ -120,7 +120,7 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           <ConnectButton />
           <button
-            className="flex h-8 w-8 items-center justify-center border-2 border-border bg-card text-foreground shadow-brutal-sm transition-all hover:bg-muted active:shadow-none active:translate-x-0.5 active:translate-y-0.5 md:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-border bg-card text-foreground shadow-brutal-sm transition-all hover:bg-muted active:shadow-none active:translate-x-0.5 active:translate-y-0.5 md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
