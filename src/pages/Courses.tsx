@@ -80,10 +80,10 @@ export default function CoursesPage() {
               </button>
               <button
                 onClick={() => setTab("mine")}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold uppercase transition-all ${
                   tab === "mine"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground"
+                    ? "border-2 border-border bg-card text-foreground shadow-brutal-sm"
+                    : "border-2 border-transparent text-muted-foreground"
                 }`}
               >
                 <Settings className="h-4 w-4" /> My Courses
