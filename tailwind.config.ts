@@ -78,8 +78,8 @@ export default {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius))",
-        sm: "calc(var(--radius))",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
         "brutal-sm": "2px 2px 0px hsl(var(--border))",
