@@ -1014,6 +1014,7 @@ export default function LessonViewPage() {
           )}
         </div>
       </div>
+      </div>
     </Layout>
   );
 }
