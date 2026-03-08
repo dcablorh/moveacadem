@@ -93,7 +93,7 @@ export function Navbar() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.1 }}
-                    className="absolute right-0 top-full mt-1 w-48 border-2 border-border bg-card shadow-brutal-sm z-50"
+                    className="absolute right-0 top-full mt-1 w-48 rounded-lg border-2 border-border bg-card shadow-brutal-sm z-50 overflow-hidden"
                   >
                     {moreLinks.map((link) => (
                       <Link
