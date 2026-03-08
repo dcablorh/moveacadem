@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 import {
   useCourse,
   useCourseLessons,
