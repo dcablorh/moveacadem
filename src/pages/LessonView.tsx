@@ -522,10 +522,9 @@ function EditLessonForm({
         onUploaded={(url) => setNewContentUri(url)}
         placeholder="Upload new lesson content..."
       />
-      <WalrusUploader
-        label="Quiz"
+      <QuizBuilder
+        label="Quiz Questions"
         onUploaded={(url) => setNewQuizUri(url)}
-        placeholder="Upload new quiz JSON..."
       />
       <div className="flex gap-2">
         <button
