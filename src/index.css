@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 6%;
 
-    --primary: 162 72% 42%;
+    --primary: 220 80% 55%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 48 96% 72%;
@@ -32,24 +32,24 @@
 
     --border: 0 0% 6%;
     --input: 0 0% 6%;
-    --ring: 162 72% 42%;
+    --ring: 220 80% 55%;
 
     --radius: 0px;
 
     --sidebar-background: 0 0% 6%;
     --sidebar-foreground: 60 9% 96%;
-    --sidebar-primary: 162 72% 42%;
+    --sidebar-primary: 220 80% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 14%;
     --sidebar-accent-foreground: 60 9% 96%;
     --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 162 72% 42%;
+    --sidebar-ring: 220 80% 55%;
 
     /* Custom tokens */
     --navy: 0 0% 6%;
     --navy-light: 0 0% 14%;
-    --emerald: 162 72% 42%;
-    --emerald-glow: 162 80% 55%;
+    --emerald: 220 80% 55%;
+    --emerald-glow: 220 90% 65%;
     --gold: 48 96% 55%;
     --gold-light: 48 100% 68%;
     --coral: 12 90% 58%;
@@ -58,7 +58,7 @@
     /* Neobrutalism: solid offset shadows, no blur */
     --shadow-card: 4px 4px 0px hsl(0 0% 6%);
     --shadow-card-hover: 6px 6px 0px hsl(0 0% 6%);
-    --shadow-glow: 4px 4px 0px hsl(162 72% 42%);
+    --shadow-glow: 4px 4px 0px hsl(220 80% 55%);
     --shadow-brutal-sm: 2px 2px 0px hsl(0 0% 6%);
     --shadow-brutal-lg: 8px 8px 0px hsl(0 0% 6%);
 
@@ -76,7 +76,7 @@
     --popover: 0 0% 12%;
     --popover-foreground: 60 9% 96%;
 
-    --primary: 162 72% 48%;
+    --primary: 220 80% 60%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 48 90% 60%;
@@ -93,7 +93,7 @@
 
     --border: 0 0% 85%;
     --input: 0 0% 85%;
-    --ring: 162 72% 48%;
+    --ring: 220 80% 60%;
   }
 }
 
