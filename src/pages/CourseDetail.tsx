@@ -816,10 +816,9 @@ function AddLessonInline({
         onUploaded={(url) => setContentUri(url)}
         placeholder="Write your lesson content here (markdown)..."
       />
-      <WalrusUploader
-        label="Quiz Content"
+      <QuizBuilder
+        label="Quiz Questions"
         onUploaded={(url) => setQuizUri(url)}
-        placeholder="Write quiz questions here..."
       />
       <div>
         <label className="mb-1 block text-sm font-medium text-foreground">
