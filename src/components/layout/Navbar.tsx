@@ -56,7 +56,7 @@ export function Navbar() {
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center border-2 border-border bg-primary shadow-brutal-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-border bg-primary shadow-brutal-sm">
             <BookOpen className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="hidden font-display text-sm font-bold uppercase tracking-tight text-foreground sm:block">
