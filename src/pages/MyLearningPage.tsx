@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 import { useCourses, useStudentProgress, useStudentCertificates, useIssueCertificate, useCourseLessons } from "@/hooks/useAcademy";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { ProgressRing } from "@/components/progress/ProgressRing";
@@ -93,6 +94,7 @@ export default function MyLearningPage() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-10">
+        <PageBreadcrumb />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="mb-2 font-display text-3xl font-bold text-foreground">My Learning</h1>
           <p className="mb-8 text-muted-foreground">Track your progress across all courses</p>

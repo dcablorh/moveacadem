@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 import {
   useCourse,
   useCourseLessons,
@@ -170,6 +171,11 @@ export default function CourseDetailPage() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-10">
+        <PageBreadcrumb items={[
+          { label: "Home", to: "/" },
+          { label: "Courses", to: "/courses" },
+          { label: course.title },
+        ]} />
         {/* Course Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

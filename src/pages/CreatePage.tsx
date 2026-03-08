@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 import { useCreateCourse, useAdminCaps } from "@/hooks/useAcademy";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useState } from "react";
@@ -26,9 +27,11 @@ export default function CreatePage() {
   return (
     <Layout>
       <div className="container mx-auto max-w-2xl px-4 py-10">
-        <Link to="/courses" className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to courses
-        </Link>
+        <PageBreadcrumb items={[
+          { label: "Home", to: "/" },
+          { label: "Courses", to: "/courses" },
+          { label: "Create" },
+        ]} />
         <h1 className="mb-2 font-display text-3xl font-bold text-foreground">Create New Course</h1>
         {isAdmin && (
           <p className="mb-2 text-sm text-muted-foreground">As an admin you may skip the usual approval process.</p>

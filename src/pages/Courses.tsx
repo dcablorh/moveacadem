@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 import { useCourses, useOwnerCaps } from "@/hooks/useAcademy";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { CourseCard } from "@/components/courses/CourseCard";
@@ -39,6 +40,7 @@ export default function CoursesPage() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-10">
+        <PageBreadcrumb />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -57,7 +59,7 @@ export default function CoursesPage() {
             {account && (
               <Link
                 to="/create"
-                className="btn-primary-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-display font-semibold"
+                className="btn-primary-gradient inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold"
               >
                 <Plus className="h-4 w-4" /> Create New Course
               </Link>
@@ -66,28 +68,28 @@ export default function CoursesPage() {
 
           {/* Tabs */}
           {account && (
-            <div className="mb-6 flex gap-1 rounded-xl bg-muted p-1 max-w-xs">
+            <div className="mb-6 flex gap-1 border-2 border-border bg-muted p-1 max-w-xs">
               <button
                 onClick={() => setTab("all")}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold uppercase transition-all ${
                   tab === "all"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground"
+                    ? "border-2 border-border bg-card text-foreground shadow-brutal-sm"
+                    : "border-2 border-transparent text-muted-foreground"
                 }`}
               >
                 <BookOpen className="h-4 w-4" /> All
               </button>
               <button
                 onClick={() => setTab("mine")}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold uppercase transition-all ${
                   tab === "mine"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground"
+                    ? "border-2 border-border bg-card text-foreground shadow-brutal-sm"
+                    : "border-2 border-transparent text-muted-foreground"
                 }`}
               >
                 <Settings className="h-4 w-4" /> My Courses
                 {myCourseCount > 0 && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                  <span className="border-2 border-border bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
                     {myCourseCount}
                   </span>
                 )}
@@ -103,7 +105,7 @@ export default function CoursesPage() {
               placeholder="Search courses..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-input bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full border-2 border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-brutal-sm"
             />
           </div>
         </motion.div>

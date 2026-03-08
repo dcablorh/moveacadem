@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 import { useStudentProgress, useStudentCertificates, useOwnerCaps } from "@/hooks/useAcademy";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { ProgressRing } from "@/components/progress/ProgressRing";
@@ -34,6 +35,7 @@ export default function ProfilePage() {
   return (
     <Layout>
       <div className="container mx-auto max-w-3xl px-4 py-10">
+        <PageBreadcrumb />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Profile header */}
           <div className="mb-10 flex items-center gap-5">
