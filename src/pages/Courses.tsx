@@ -67,7 +67,7 @@ export default function CoursesPage() {
 
           {/* Tabs */}
           {account && (
-            <div className="mb-6 flex gap-1 rounded-xl bg-muted p-1 max-w-xs">
+            <div className="mb-6 flex gap-1 border-2 border-border bg-muted p-1 max-w-xs">
               <button
                 onClick={() => setTab("all")}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all ${
