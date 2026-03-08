@@ -19,6 +19,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { LessonItem } from "@/components/courses/LessonItem";
 import { ProgressRing } from "@/components/progress/ProgressRing";
 import { WalrusUploader } from "@/components/walrus/WalrusUploader";
+import { QuizBuilder } from "@/components/walrus/QuizBuilder";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
