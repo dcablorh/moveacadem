@@ -11,16 +11,46 @@ interface WalrusContentProps {
   markdown?: boolean;
 }
 
+function extractYoutubeId(url: string): string | null {
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+  );
+  return match ? match[1] : null;
+}
+
+function isYoutubeUri(uri: string): boolean {
+  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//.test(uri);
+}
+
 /**
- * Renders content from a Walrus blob URI or aggregator URL.
- * Extracts blobId from aggregator URLs, or treats as external link.
- * Renders content as Markdown by default.
+ * Renders content from a Walrus blob URI, aggregator URL, or YouTube link.
+ * Detects YouTube URLs and renders an embedded player.
  */
 export function WalrusContent({
   uri,
   className,
   markdown = true,
 }: WalrusContentProps) {
+  // Check for YouTube first
+  if (isYoutubeUri(uri)) {
+    const videoId = extractYoutubeId(uri);
+    if (videoId) {
+      return (
+        <div className={className || ""}>
+          <div className="relative w-full overflow-hidden rounded-xl border border-border" style={{ paddingBottom: "56.25%" }}>
+            <iframe
+              src={`https://www.youtube.com/embed/${videoId}`}
+              title="YouTube video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 h-full w-full"
+            />
+          </div>
+        </div>
+      );
+    }
+  }
+
   const blobId = extractBlobId(uri);
 
   const {
@@ -51,42 +81,22 @@ export function WalrusContent({
   if (isLoading) {
     return (
       <div className="w-full space-y-5 py-4">
-        {/* Simulates a heading */}
         <motion.div
           initial={{ opacity: 0.5 }}
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           className="h-8 w-2/5 rounded-lg bg-muted/60"
         />
-        {/* Simulates a video or code block */}
         <motion.div
           initial={{ opacity: 0.5 }}
           animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.2,
-          }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
           className="h-48 w-full rounded-xl bg-muted/40"
         />
-        {/* Simulates paragraphs */}
         <div className="space-y-3">
-          <motion.div
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
-            className="h-4 w-full rounded bg-muted/50"
-          />
-          <motion.div
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-            className="h-4 w-[90%] rounded bg-muted/50"
-          />
-          <motion.div
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
-            className="h-4 w-[75%] rounded bg-muted/50"
-          />
+          <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity, delay: 0.4 }} className="h-4 w-full rounded bg-muted/50" />
+          <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity, delay: 0.5 }} className="h-4 w-[90%] rounded bg-muted/50" />
+          <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity, delay: 0.6 }} className="h-4 w-[75%] rounded bg-muted/50" />
         </div>
       </div>
     );
@@ -102,7 +112,6 @@ export function WalrusContent({
 
   if (!content) return null;
 
-  // Determine if content looks like Markdown
   const looksLikeMarkdown =
     /^#{1,6}\s|^\*\*|\*\s|^-\s|^\d+\.\s|```|\[.*\]\(/.test(String(content));
   const shouldRenderMarkdown = markdown && looksLikeMarkdown;
@@ -124,12 +133,10 @@ export function WalrusContent({
 
 function extractBlobId(uri: string): string | null {
   if (!uri) return null;
-  // Match aggregator URL pattern
   const prefix = `${AGGREGATOR_URL}/v1/blobs/`;
   if (uri.startsWith(prefix)) {
     return uri.slice(prefix.length);
   }
-  // If it looks like a raw blob ID (no slashes, alphanumeric + base64)
   if (/^[A-Za-z0-9_-]{20,}$/.test(uri)) {
     return uri;
   }
