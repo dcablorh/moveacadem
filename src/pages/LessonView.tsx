@@ -33,6 +33,7 @@ import { useCurrentAccount } from "@mysten/dapp-kit";
 import { WalrusContent } from "@/components/walrus/WalrusContent";
 import { WalrusUploader } from "@/components/walrus/WalrusUploader";
 import { QuizBuilder } from "@/components/walrus/QuizBuilder";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 import { useQuery } from "@tanstack/react-query";
 import { readBlob, AGGREGATOR_URL } from "@/lib/walrus";
 import Editor from "@monaco-editor/react";
