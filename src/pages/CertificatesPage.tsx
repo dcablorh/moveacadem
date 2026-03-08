@@ -30,6 +30,7 @@ export default function CertificatesPage() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-10">
+        <PageBreadcrumb />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="mb-2 font-display text-3xl font-bold text-foreground">
             My Certificates
