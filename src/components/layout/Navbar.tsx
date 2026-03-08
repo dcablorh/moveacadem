@@ -180,7 +180,7 @@ function MobileNavItem({ to, label, icon: Icon, active, onClick }: { to: string;
     <Link
       to={to}
       onClick={onClick}
-      className={`flex items-center gap-3 border-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all ${
+      className={`flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all ${
         active
           ? "border-border bg-primary text-primary-foreground shadow-brutal-sm"
           : "border-transparent text-muted-foreground hover:border-border hover:bg-muted"
