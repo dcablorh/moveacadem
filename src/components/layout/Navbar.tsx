@@ -76,7 +76,7 @@ export function Navbar() {
             <div className="relative" ref={moreRef}>
               <button
                 onClick={() => setMoreOpen(!moreOpen)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all ${
                   moreHasActive
                     ? "border-2 border-border bg-primary text-primary-foreground shadow-brutal-sm"
                     : "border-2 border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:shadow-brutal-sm"
