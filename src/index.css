@@ -58,7 +58,7 @@
     /* Neobrutalism: solid offset shadows, no blur */
     --shadow-card: 4px 4px 0px hsl(0 0% 6%);
     --shadow-card-hover: 6px 6px 0px hsl(0 0% 6%);
-    --shadow-glow: 4px 4px 0px hsl(162 72% 42%);
+    --shadow-glow: 4px 4px 0px hsl(220 80% 55%);
     --shadow-brutal-sm: 2px 2px 0px hsl(0 0% 6%);
     --shadow-brutal-lg: 8px 8px 0px hsl(0 0% 6%);
 
