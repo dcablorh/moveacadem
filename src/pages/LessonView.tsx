@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { WalrusContent } from "@/components/walrus/WalrusContent";
 import { WalrusUploader } from "@/components/walrus/WalrusUploader";
+import { QuizBuilder } from "@/components/walrus/QuizBuilder";
 import { useQuery } from "@tanstack/react-query";
 import { readBlob, AGGREGATOR_URL } from "@/lib/walrus";
 import Editor from "@monaco-editor/react";
@@ -521,10 +522,9 @@ function EditLessonForm({
         onUploaded={(url) => setNewContentUri(url)}
         placeholder="Upload new lesson content..."
       />
-      <WalrusUploader
-        label="Quiz"
+      <QuizBuilder
+        label="Quiz Questions"
         onUploaded={(url) => setNewQuizUri(url)}
-        placeholder="Upload new quiz JSON..."
       />
       <div className="flex gap-2">
         <button

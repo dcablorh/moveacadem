@@ -19,6 +19,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { LessonItem } from "@/components/courses/LessonItem";
 import { ProgressRing } from "@/components/progress/ProgressRing";
 import { WalrusUploader } from "@/components/walrus/WalrusUploader";
+import { QuizBuilder } from "@/components/walrus/QuizBuilder";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
@@ -815,10 +816,9 @@ function AddLessonInline({
         onUploaded={(url) => setContentUri(url)}
         placeholder="Write your lesson content here (markdown)..."
       />
-      <WalrusUploader
-        label="Quiz Content"
+      <QuizBuilder
+        label="Quiz Questions"
         onUploaded={(url) => setQuizUri(url)}
-        placeholder="Write quiz questions here..."
       />
       <div>
         <label className="mb-1 block text-sm font-medium text-foreground">
