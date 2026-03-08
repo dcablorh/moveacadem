@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 import { useCreateCourse, useAdminCaps } from "@/hooks/useAcademy";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useState } from "react";
