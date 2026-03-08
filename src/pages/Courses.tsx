@@ -58,7 +58,7 @@ export default function CoursesPage() {
             {account && (
               <Link
                 to="/create"
-                className="btn-primary-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-display font-semibold"
+                className="btn-primary-gradient inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold"
               >
                 <Plus className="h-4 w-4" /> Create New Course
               </Link>
